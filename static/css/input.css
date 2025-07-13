@@ -11,6 +11,7 @@
   
   body {
     @apply bg-cream text-gray-800 antialiased;
+    line-height: 1.7;
   }
   
   ::selection {
@@ -19,16 +20,28 @@
 }
 
 @layer components {
+  /* Subtle shadows and borders */
+  .card-subtle {
+    @apply bg-white/60 backdrop-blur-sm border border-gray-100 rounded-lg shadow-sm;
+  }
+  
+  .tag-accent {
+    @apply bg-terracotta-100 text-terracotta-600 border border-terracotta-200;
+  }
+  
+  .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
   .prose-content h1 {
-    @apply text-4xl font-bold mb-4 text-gray-900 tracking-tighter;
+    @apply text-4xl font-bold mb-6 text-gray-900 tracking-tighter;
   }
   
   .prose-content h2 {
-    @apply text-3xl font-semibold mb-3 mt-8 text-gray-900 tracking-tight;
+    @apply text-3xl font-semibold mb-4 mt-12 text-gray-900 tracking-tight;
   }
   
   .prose-content h3 {
-    @apply text-2xl font-semibold mb-3 mt-6 text-gray-900 tracking-tight;
+    @apply text-2xl font-semibold mb-4 mt-10 text-gray-900 tracking-tight;
   }
   
   .prose-content h4 {
@@ -44,15 +57,16 @@
   }
   
   .prose-content p {
-    @apply mb-6 leading-relaxed text-base;
+    @apply mb-8 text-base;
+    line-height: 1.75;
   }
   
   .prose-content a {
-    @apply text-sage-600 hover:text-sage-700 transition-colors underline-offset-2 hover:underline font-semibold;
+    @apply text-slate-blue-500 hover:text-slate-blue-400 transition-colors underline underline-offset-2 font-semibold;
   }
   
   .prose-content strong {
-    @apply text-sage-700 font-semibold;
+    @apply text-terracotta-600 font-semibold;
   }
   
   .prose-content ul {
@@ -64,11 +78,15 @@
   }
   
   .prose-content blockquote {
-    @apply border-l-4 border-sage-400 pl-4 my-6 italic text-gray-600;
+    @apply border-l-4 border-sage-400 pl-4 my-6 italic text-sage-600;
+  }
+  
+  .prose-content em {
+    @apply text-slate-blue-400;
   }
   
   .prose-content code {
-    @apply bg-sage-50 text-sage-700 px-1 py-0.5 rounded text-sm font-mono;
+    @apply bg-slate-blue-100 text-slate-blue-500 px-1.5 py-1 rounded text-sm font-mono;
   }
   
   .prose-content pre {

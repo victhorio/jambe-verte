@@ -18,11 +18,16 @@
 <!-- Desktop Sidebar -->
 <aside class="hidden md:flex md:flex-col md:w-64 md:border-r md:border-gray-200 md:min-h-screen">
     <div class="pt-12 px-6">
+        <div class="mb-8 ml-6 select-none">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-sage-400 text-white font-bold text-xl rounded-lg shadow-soft">
+                JV
+            </div>
+        </div>
         <nav class="space-y-2">
-            <a href="/" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/">
+            <a href="/" class="nav-link block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-sage-50 rounded-lg transition-colors font-medium" data-path="/">
                 About
             </a>
-            <a href="/posts" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/posts">
+            <a href="/posts" class="nav-link block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-sage-50 rounded-lg transition-colors font-medium" data-path="/posts">
                 Posts
             </a>
         </nav>
@@ -46,8 +51,8 @@
             
             if (shouldHighlight) {
                 // Desktop and mobile styles - elegant dot indicator
-                link.classList.add('text-gray-800', 'font-medium');
-                link.classList.remove('text-gray-600');
+                link.classList.add('text-gray-900', 'font-semibold');
+                link.classList.remove('text-gray-700', 'text-gray-600');
                 
                 // Add sage dot before text content
                 const originalText = link.textContent.trim();
