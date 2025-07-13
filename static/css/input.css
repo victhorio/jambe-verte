@@ -20,7 +20,7 @@
 
 @layer components {
   .prose-content h1 {
-    @apply text-4xl font-bold mb-4 text-gray-900 tracking-tight;
+    @apply text-4xl font-bold mb-4 text-gray-900 tracking-tighter;
   }
   
   .prose-content h2 {
@@ -48,7 +48,7 @@
   }
   
   .prose-content a {
-    @apply text-sage-600 hover:text-sage-700 transition-colors underline-offset-2 hover:underline;
+    @apply text-sage-600 hover:text-sage-700 transition-colors underline-offset-2 hover:underline font-semibold;
   }
   
   .prose-content strong {
@@ -72,10 +72,10 @@
   }
   
   .prose-content pre {
-    @apply bg-gray-100 p-4 rounded-lg overflow-x-auto my-6;
+    @apply bg-gray-50 border border-gray-200 rounded-lg overflow-x-auto my-6 p-4;
   }
   
   .prose-content pre code {
-    @apply bg-transparent p-0;
+    @apply bg-transparent p-0 text-sm leading-tight;
   }
 }

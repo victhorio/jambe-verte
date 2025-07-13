@@ -47,27 +47,26 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts := cache.GetPosts()
-
-	// Get recent posts (max 5)
-	recentPosts := posts
-	if len(posts) > 5 {
-		recentPosts = posts[:5]
+	// Serve the About page content for the home route
+	page, ok := cache.GetPage("about")
+	if !ok {
+		http.NotFound(w, r)
+		return
 	}
 
 	data := struct {
 		Title string
-		Posts []*content.Post
+		Page  *content.Post
 	}{
-		Title: "Home",
-		Posts: recentPosts,
+		Title: page.Title,
+		Page:  page,
 	}
 
 	files := []string{
 		"templates/base.html",
 		"templates/partials/nav.html",
 		"templates/partials/footer.html",
-		"templates/pages/home.html",
+		"templates/pages/page.html",
 	}
 	h.renderAndCache(r.Context(), w, "/", files, data)
 }

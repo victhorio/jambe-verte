@@ -15,6 +15,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/victhorio/jambe-verte/internal/logger"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/parser"
 )
@@ -91,8 +92,13 @@ func loadPost(path string, isPost bool) (*Post, error) {
 		return nil, fmt.Errorf("failed to read post `%s`: %w", path, err)
 	}
 
-	// Parse markdown with frontmatter
-	md := goldmark.New(goldmark.WithExtensions(meta.Meta))
+	// Parse markdown with frontmatter and syntax highlighting
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			meta.Meta,
+			highlighting.NewHighlighting(highlighting.WithStyle("github")),
+		),
+	)
 
 	var htmlBuf bytes.Buffer
 	context := parser.NewContext()

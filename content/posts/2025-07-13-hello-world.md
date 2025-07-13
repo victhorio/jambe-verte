@@ -25,7 +25,30 @@ def this():
     return "is a code block" + "!"
 ```
 
-and
+Here's some Go code:
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, syntax highlighting! And with a very very very quite very long line at that!")
+}
+```
+
+And some JavaScript:
+
+```javascript
+const greeting = "Hello, world!";
+console.log(greeting);
+
+function add(a, b) {
+  return a + b;
+}
+```
+
+And
 
 > "This is a quote block."
 >

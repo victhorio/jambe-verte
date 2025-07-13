@@ -1,11 +1,13 @@
-{{define "title"}}{{.Page.Title}}{{end}}
+{{define "title"}}
+{{if eq .Page.Title "About"}}
+Jambe Verte
+{{else}}
+{{.Page.Title}} - Jambe Verte
+{{end}}
+{{end}}
 
 {{define "main"}}
 <article>
-    <header class="mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 tracking-tighter">{{.Page.Title}}</h1>
-    </header>
-    
     <div class="prose-content text-gray-700 leading-relaxed">
         {{.Page.HTML}}
     </div>
