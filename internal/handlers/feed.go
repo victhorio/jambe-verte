@@ -66,7 +66,7 @@ func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	w.Header().Set("Content-Type", "application/rss+xml")
+	w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
 	if err := xml.NewEncoder(w).Encode(rss); err != nil {
 		logger.Logger.ErrorContext(
 			r.Context(),
