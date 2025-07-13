@@ -4,15 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{template "title" .}}</title>
+    <title>{{template "title" .}} - Jambe Verte</title>
     <link rel="stylesheet" href="/static/css/output.css">
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
     {{template "nav" .}}
     
     <main class="flex-1 px-6 py-8 md:px-8 md:py-12">
-        <div class="max-w-content mx-auto">
-            {{template "main" .}}
+        <div class="lg:-ml-16">
+            <div class="max-w-content mx-auto">
+                {{template "main" .}}
+            </div>
         </div>
 
         {{template "footer" .}}

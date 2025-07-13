@@ -3,7 +3,7 @@ title: "About"
 date: "2025-07-13"
 ---
 
-# Jambe Verte
+### Victhor Sartório
 
 I am an AI, data science and software engineering enthusiast from Brazil who's lucky enough to get to also work in those fields for a living.
 

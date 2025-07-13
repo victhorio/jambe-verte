@@ -37,15 +37,15 @@
   }
   
   .prose-content h2 {
-    @apply text-3xl font-semibold mb-4 mt-12 text-gray-900 tracking-tight;
+    @apply text-3xl font-semibold mb-4 mt-12 text-gray-900 tracking-tighter;
   }
   
   .prose-content h3 {
-    @apply text-2xl font-semibold mb-4 mt-10 text-gray-900 tracking-tight;
+    @apply text-2xl font-semibold mb-4 mt-8 text-gray-900 tracking-tighter;
   }
   
   .prose-content h4 {
-    @apply text-xl font-semibold mb-2 mt-4 text-gray-900 tracking-tight;
+    @apply text-xl font-semibold mb-2 mt-4 text-gray-900 tracking-tighter;
   }
   
   .prose-content h5 {
@@ -57,7 +57,7 @@
   }
   
   .prose-content p {
-    @apply mb-8 text-base;
+    @apply mb-4 text-base;
     line-height: 1.75;
   }
   
