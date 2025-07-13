@@ -42,7 +42,8 @@ Thumbs.db
 .env.*.local
 
 # Build artifacts
-/blog
+/jv-server
+/jv-helper
 /dist/
 /build/
 
