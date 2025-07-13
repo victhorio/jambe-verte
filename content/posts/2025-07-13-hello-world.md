@@ -16,7 +16,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 #### This is an h4 header
 
-And this _is italics_ as well as `inline code text`.
+And this _is italics_ as well as `inline code text` as well as [a link](/).
 
 Further:
 
@@ -27,5 +27,6 @@ def this():
 
 and
 
-> This is a quote block.
+> "This is a quote block."
+>
 > Someone, c. 2025

@@ -49,7 +49,7 @@ func main() {
 
 	// Routes
 	r.Get("/", h.Home)
-	r.Get("/blog", h.ListPosts)
+	r.Get("/posts", h.ListPosts)
 	r.Get("/blog/{slug}", h.ShowPost)
 	r.Get("/tag/{tag}", h.PostsByTag)
 	r.Get("/feed.xml", h.RSSFeed)

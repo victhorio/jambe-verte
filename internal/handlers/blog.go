@@ -76,7 +76,7 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	// Check page cache first
 	cache := h.getCache()
 	pageCache := cache.GetPageCache()
-	if cached, ok := pageCache.Get("/blog"); ok {
+	if cached, ok := pageCache.Get("/posts"); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(cached)
 		return
@@ -100,7 +100,7 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/list.html",
 	}
-	h.renderAndCache(r.Context(), w, "/blog", files, data)
+	h.renderAndCache(r.Context(), w, "/posts", files, data)
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {

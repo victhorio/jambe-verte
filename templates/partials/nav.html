@@ -12,7 +12,7 @@
     </div>
     <div x-show="open" x-transition class="border-t border-gray-200 bg-cream">
         <a href="/" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/">Home</a>
-        <a href="/blog" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/blog">Posts</a>
+        <a href="/posts" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/posts">Posts</a>
         <a href="/about" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/about">About</a>
     </div>
 </nav>
@@ -25,7 +25,7 @@
             <a href="/" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/">
                 Home
             </a>
-            <a href="/blog" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/blog">
+            <a href="/posts" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/posts">
                 Posts
             </a>
             <a href="/about" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/about">
@@ -45,7 +45,7 @@
             const linkPath = link.getAttribute('data-path');
             
             // Check if current path matches or starts with link path (for nested pages)
-            if (currentPath === linkPath || (linkPath === '/blog' && currentPath.startsWith('/blog/'))) {
+            if (currentPath === linkPath || (linkPath === '/posts' && currentPath.startsWith('/blog/'))) {
                 // Desktop styles
                 if (link.closest('aside')) {
                     link.classList.add('text-gray-800', 'bg-sage-50', 'border-l-4', 'border-sage-400', '-ml-[1px]');

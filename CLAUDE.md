@@ -37,7 +37,7 @@ This is a Go-based blog application built with the chi router. The architecture 
 ### Routing Structure
 
 - `/` - Home page
-- `/blog` - Blog listing
+- `/posts` - Blog listing
 - `/blog/{slug}` - Individual post
 - `/tag/{tag}` - Posts by tag
 - `/feed.xml` - RSS feed
@@ -103,6 +103,7 @@ bun run watch-css
 ```
 
 **CSS File Structure:**
+
 - `static/css/input.css` - Main Tailwind input file with custom component styles
 - `static/css/output.css` - Compiled output file (this is what the website loads)
 
