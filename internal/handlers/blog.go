@@ -89,7 +89,7 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 		Tag   string
 		Posts []*content.Post
 	}{
-		Title: "Blog",
+		Title: "Posts",
 		Tag:   "", // Empty for general blog listing
 		Posts: posts,
 	}
@@ -237,6 +237,9 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	h.setCache(newCache)
 
 	logger.Logger.InfoContext(ctx, "Cache refreshed successfully", "posts", len(posts), "pages", len(pages))
+
+	// Also attempt to rebuild CSS
+	content.RebuildCSS(ctx)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte("OK"))

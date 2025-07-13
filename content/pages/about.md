@@ -1,33 +1,12 @@
 ---
 title: "About"
-date: "2024-01-15"
+date: "2025-07-13"
 ---
 
-# About
+I am an AI, data science and software engineering enthusiast from Brazil that's lucky enough to get to also work in those fields for a living.
 
-Welcome to my blog! This is a minimal blog built with Go.
+I'm creating this blog to share stuff I find interesting on these topics and possibly others, as well as to have my own little place on the internet because that feels nice. Not much in here yet but check out [the posts](/posts) to see if there's anything new by the time you're here!
 
-## About Me
+This blog is hosted on a Hetzner machine, running on a go server ([repo here](https://github.com/victhorio/jambe-verte)).
 
-I'm a developer who enjoys building fast, simple, and efficient software. This blog is where I share my thoughts on programming, technology, and other interests.
-
-## About This Blog
-
-This blog is built with:
-
-- Go programming language
-- Chi router
-- Markdown for content
-- Minimal CSS
-- No JavaScript framework (just Alpine.js for interactivity)
-
-The entire site compiles to a single binary and serves pages in under 10ms.
-
-## Contact
-
-You can find me on:
-
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Twitter: [@yourusername](https://twitter.com/yourusername)
-
-Feel free to reach out!
+Not much to see here yet, but if you want to know more feel free to reach out!
