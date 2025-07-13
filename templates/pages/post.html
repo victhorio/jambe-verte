@@ -1,20 +1,24 @@
 {{define "title"}}{{.Post.Title}}{{end}}
 
 {{define "main"}}
-<article class="container post">
-    <header>
-        <h1>{{.Post.Title}}</h1>
-        <time>{{.Post.Date.Format "January 2, 2006"}}</time>
-        {{if .Post.Tags}}
-        <div class="tags">
-            {{range .Post.Tags}}
-            <a href="/tag/{{.}}" class="tag">{{.}}</a>
+<article>
+    <header class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">{{.Post.Title}}</h1>
+        <div class="flex flex-wrap items-center gap-4 text-sm">
+            <time class="text-gray-500">{{.Post.Date.Format "January 2, 2006"}}</time>
+            {{if .Post.Tags}}
+            <div class="flex flex-wrap gap-2">
+                {{range .Post.Tags}}
+                <a href="/tag/{{.}}" class="inline-block px-3 py-1 bg-sage-400/20 text-sage-600 rounded-full hover:bg-sage-400/30 transition-colors">
+                    {{.}}
+                </a>
+                {{end}}
+            </div>
             {{end}}
         </div>
-        {{end}}
     </header>
     
-    <div class="post-content">
+    <div class="prose-content text-gray-700 leading-relaxed">
         {{.Post.HTML}}
     </div>
 </article>

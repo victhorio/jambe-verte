@@ -87,6 +87,27 @@ go fmt ./...
 go vet ./...
 ```
 
+## CSS Build Process
+
+The application uses Tailwind CSS for styling. After making changes to templates or CSS:
+
+```bash
+# Install dependencies (first time only)
+bun install
+
+# Build CSS for production
+bun run build-css
+
+# Watch for changes during development
+bun run watch-css
+```
+
+**CSS File Structure:**
+- `static/css/input.css` - Main Tailwind input file with custom component styles
+- `static/css/output.css` - Compiled output file (this is what the website loads)
+
+**Important:** Always run `bun run build-css` after making changes to `input.css` to update the compiled `output.css` file.
+
 ## Dependencies
 
 The project uses minimal dependencies:

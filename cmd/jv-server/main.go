@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"os/exec"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -65,11 +66,32 @@ func main() {
 	fileServer := http.FileServer(http.Dir("static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 
+	// Rebuild CSS on startup for better DX
+	rebuildCSS(ctx)
+
 	// Start server
 	addr := ":8080"
 	logger.Logger.InfoContext(ctx, "Starting server", "address", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		logger.Logger.ErrorContext(ctx, "Server failed to start", "error", err)
 		panic(err)
+	}
+}
+
+func rebuildCSS(ctx context.Context) {
+	logger.Logger.InfoContext(ctx, "Rebuilding CSS...")
+
+	// Check if bun exists
+	if _, err := exec.LookPath("bun"); err != nil {
+		logger.Logger.WarnContext(ctx, "bun not found in PATH, skipping CSS rebuild")
+		return
+	}
+
+	// Run bun build-css
+	cmd := exec.Command("bun", "run", "build-css")
+	if err := cmd.Run(); err != nil {
+		logger.Logger.WarnContext(ctx, "CSS rebuild failed", "error", err)
+	} else {
+		logger.Logger.InfoContext(ctx, "CSS rebuild completed successfully")
 	}
 }

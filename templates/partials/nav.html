@@ -1,9 +1,63 @@
 {{define "nav"}}
-<nav>
-    <div class="nav-container">
-        <a href="/">Home</a>
-        <a href="/blog">Blog</a>
-        <a href="/about">About</a>
+<!-- Mobile Navigation -->
+<nav class="md:hidden sticky top-0 z-50 bg-cream border-b border-gray-200" x-data="{ open: false }">
+    <div class="flex items-center justify-between px-6 h-16">
+        <a href="/" class="text-xl font-semibold text-gray-800">Jambe Verte</a>
+        <button @click="open = !open" class="text-gray-600 hover:text-gray-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                <path x-show="open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+    <div x-show="open" x-transition class="border-t border-gray-200 bg-cream">
+        <a href="/" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/">Home</a>
+        <a href="/blog" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/blog">Posts</a>
+        <a href="/about" class="nav-link block px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50" data-path="/about">About</a>
     </div>
 </nav>
+
+<!-- Desktop Sidebar -->
+<aside class="hidden md:flex md:flex-col md:w-64 md:border-r md:border-gray-200 md:min-h-screen">
+    <div class="p-8">
+        <a href="/" class="text-2xl font-semibold text-gray-800 block mb-8">Jambe Verte</a>
+        <nav class="space-y-1">
+            <a href="/" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/">
+                Home
+            </a>
+            <a href="/blog" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/blog">
+                Posts
+            </a>
+            <a href="/about" class="nav-link block px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-sage-50 rounded transition-colors" data-path="/about">
+                About
+            </a>
+        </nav>
+    </div>
+</aside>
+
+<script>
+    // Set active navigation state
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        navLinks.forEach(link => {
+            const linkPath = link.getAttribute('data-path');
+            
+            // Check if current path matches or starts with link path (for nested pages)
+            if (currentPath === linkPath || (linkPath === '/blog' && currentPath.startsWith('/blog/'))) {
+                // Desktop styles
+                if (link.closest('aside')) {
+                    link.classList.add('text-gray-800', 'bg-sage-50', 'border-l-4', 'border-sage-400', '-ml-[1px]');
+                    link.classList.remove('text-gray-600');
+                }
+                // Mobile styles
+                else {
+                    link.classList.add('text-gray-800', 'bg-sage-50', 'border-l-4', 'border-sage-400');
+                    link.classList.remove('text-gray-600');
+                }
+            }
+        });
+    });
+</script>
 {{end}}

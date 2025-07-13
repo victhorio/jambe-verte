@@ -47,6 +47,9 @@ Thumbs.db
 /dist/
 /build/
 
+# Node.js dependencies
+node_modules/
+
 # Claude AI assistant files
 .claude/
 .claude.md

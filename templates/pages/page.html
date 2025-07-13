@@ -1,10 +1,12 @@
 {{define "title"}}{{.Page.Title}}{{end}}
 
 {{define "main"}}
-<article class="container page">
-    <h1>{{.Page.Title}}</h1>
+<article>
+    <header class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-900">{{.Page.Title}}</h1>
+    </header>
     
-    <div class="page-content">
+    <div class="prose-content text-gray-700 leading-relaxed">
         {{.Page.HTML}}
     </div>
 </article>

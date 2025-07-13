@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-cream text-gray-800 antialiased;
+  }
+  
+  ::selection {
+    @apply bg-sage-400/20 text-sage-700;
+  }
+}
+
+@layer components {
+  .prose-content h1 {
+    @apply text-4xl font-bold mb-4 text-gray-900;
+  }
+  
+  .prose-content h2 {
+    @apply text-3xl font-semibold mb-3 mt-8 text-gray-900;
+  }
+  
+  .prose-content h3 {
+    @apply text-2xl font-semibold mb-3 mt-6 text-gray-900;
+  }
+  
+  .prose-content p {
+    @apply mb-6 leading-relaxed;
+  }
+  
+  .prose-content a {
+    @apply text-sage-400 hover:text-sage-500 transition-colors underline-offset-2 hover:underline;
+  }
+  
+  .prose-content ul {
+    @apply list-disc list-inside mb-6 space-y-2;
+  }
+  
+  .prose-content ol {
+    @apply list-decimal list-inside mb-6 space-y-2;
+  }
+  
+  .prose-content blockquote {
+    @apply border-l-4 border-sage-400 pl-4 my-6 italic text-gray-600;
+  }
+  
+  .prose-content code {
+    @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+  }
+  
+  .prose-content pre {
+    @apply bg-gray-100 p-4 rounded-lg overflow-x-auto my-6;
+  }
+  
+  .prose-content pre code {
+    @apply bg-transparent p-0;
+  }
+}

@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{template "title" .}} - Jambe Verte</title>
-    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/output.css">
 </head>
-<body>
+<body class="min-h-screen flex flex-col md:flex-row">
     {{template "nav" .}}
     
-    <main>
-        {{template "main" .}}
+    <main class="flex-1 px-6 py-8 md:px-8 md:py-12">
+        <div class="max-w-content mx-auto">
+            {{template "main" .}}
+        </div>
     </main>
-    
-    {{template "footer" .}}
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>

@@ -1,30 +1,44 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-<div class="container">
-    <h1>Welcome to Jambe Verte</h1>
-    <p>A minimal blog built with Go.</p>
+<div>
+    <header class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Jambe Verte</h1>
+        <p class="text-lg text-gray-600">A minimal blog built with Go.</p>
+    </header>
     
-    <h2>Recent Posts</h2>
-    <div class="posts">
-        {{range .Posts}}
-        <article class="post-preview">
-            <h3><a href="/blog/{{.Slug}}">{{.Title}}</a></h3>
-            <time>{{.Date.Format "January 2, 2006"}}</time>
-            {{if .Description}}
-            <p>{{.Description}}</p>
-            {{end}}
-            {{if .Tags}}
-            <div class="tags">
-                {{range .Tags}}
-                <a href="/tag/{{.}}" class="tag">{{.}}</a>
+    <section>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-8">Recent Posts</h2>
+        <div class="space-y-8">
+            {{range .Posts}}
+            <article class="pb-8 border-b border-gray-200 last:border-0">
+                <h3 class="mb-2">
+                    <a href="/blog/{{.Slug}}" class="text-2xl font-semibold text-gray-800 hover:text-sage-500 transition-colors">
+                        {{.Title}}
+                    </a>
+                </h3>
+                <time class="text-sm text-gray-500">{{.Date.Format "January 2, 2006"}}</time>
+                {{if .Description}}
+                <p class="mt-3 text-gray-600 leading-relaxed">{{.Description}}</p>
                 {{end}}
-            </div>
+                {{if .Tags}}
+                <div class="mt-3 flex flex-wrap gap-2">
+                    {{range .Tags}}
+                    <a href="/tag/{{.}}" class="inline-block px-3 py-1 text-sm bg-sage-400/20 text-sage-600 rounded-full hover:bg-sage-400/30 transition-colors">
+                        {{.}}
+                    </a>
+                    {{end}}
+                </div>
+                {{end}}
+            </article>
             {{end}}
-        </article>
-        {{end}}
-    </div>
-    
-    <p><a href="/blog">View all posts →</a></p>
+        </div>
+        
+        <div class="mt-12">
+            <a href="/blog" class="text-sage-400 hover:text-sage-500 font-medium transition-colors">
+                View all posts →
+            </a>
+        </div>
+    </section>
 </div>
 {{end}}
