@@ -5,6 +5,7 @@ import (
 	"context"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/victhorio/jambe-verte/internal/cache"
@@ -92,8 +93,8 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 
 	// Check page cache first
 	pageCache := h.cache.GetPageCache()
-	cachePath := "/blog/" + slug
-	if cached, ok := pageCache.Get(cachePath); ok {
+	cacheRoute := "/blog/" + slug
+	if cached, ok := pageCache.Get(cacheRoute); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(cached)
 		return
@@ -119,7 +120,7 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/post.html",
 	}
-	h.renderAndCache(r.Context(), w, cachePath, files, data)
+	h.renderAndCache(r.Context(), w, cacheRoute, files, data)
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
@@ -127,8 +128,8 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 
 	// Check page cache first
 	pageCache := h.cache.GetPageCache()
-	cachePath := "/" + slug
-	if cached, ok := pageCache.Get(cachePath); ok {
+	cacheRoute := "/" + slug
+	if cached, ok := pageCache.Get(cacheRoute); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(cached)
 		return
@@ -154,7 +155,7 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/page.html",
 	}
-	h.renderAndCache(r.Context(), w, cachePath, files, data)
+	h.renderAndCache(r.Context(), w, cacheRoute, files, data)
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
@@ -162,8 +163,8 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 
 	// Check page cache first
 	pageCache := h.cache.GetPageCache()
-	cachePath := "/tag/" + tag
-	if cached, ok := pageCache.Get(cachePath); ok {
+	cacheRoute := "/tag/" + tag
+	if cached, ok := pageCache.Get(cacheRoute); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(cached)
 		return
@@ -187,10 +188,10 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/list.html",
 	}
-	h.renderAndCache(r.Context(), w, cachePath, files, data)
+	h.renderAndCache(r.Context(), w, cacheRoute, files, data)
 }
 
-func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, path string, templateFiles []string, data any) {
+func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, route string, templateFiles []string, data any) {
 	// Check if context is cancelled
 	select {
 	case <-ctx.Done():
@@ -198,6 +199,8 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pat
 		return
 	default:
 	}
+
+	startTime := time.Now()
 
 	// Parse the template files
 	ts, err := template.ParseFiles(templateFiles...)
@@ -225,10 +228,13 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pat
 		return
 	}
 
+	duration := time.Since(startTime)
+	logger.Logger.InfoContext(ctx, "Rendered route in cold path", "route", route, "duration", duration.String())
+
 	// Cache the rendered content
 	content := buf.Bytes()
 	pageCache := h.cache.GetPageCache()
-	pageCache.Set(path, content)
+	pageCache.Set(route, content)
 
 	// Check if context is cancelled before writing response
 	select {
