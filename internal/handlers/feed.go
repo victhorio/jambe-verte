@@ -26,15 +26,14 @@ type Item struct {
 	Link        string `xml:"link"`
 	Description string `xml:"description"`
 	PubDate     string `xml:"pubDate"`
+	GUID        string `xml:"guid"`
 }
 
 func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
-	posts := h.cache.GetPosts()
-
 	// Get recent posts (max 20)
-	feedPosts := posts
+	posts := h.getCache().GetPosts()
 	if len(posts) > 20 {
-		feedPosts = posts[:20]
+		posts = posts[:20]
 	}
 
 	// Determine the scheme from the request
@@ -45,31 +44,36 @@ func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
 	baseURL := scheme + "://" + r.Host
 
 	// Build RSS items
-	items := make([]Item, len(feedPosts))
-	for i, post := range feedPosts {
+	items := make([]Item, len(posts))
+	for i, post := range posts {
+		postURL := baseURL + "/blog/" + post.Slug
 		items[i] = Item{
 			Title:       post.Title,
-			Link:        baseURL + "/blog/" + post.Slug,
+			Link:        postURL,
 			Description: post.Description,
 			PubDate:     post.Date.Format(time.RFC1123Z),
+			GUID:        postURL, // Use URL as unique identifier
 		}
 	}
 
 	rss := RSS{
 		Version: "2.0",
 		Channel: Channel{
-			Title:       "My Blog",
+			Title:       "Jambe Verte",
 			Link:        baseURL,
-			Description: "A minimal Go blog",
+			Description: "A blog by Victhor Sartório",
 			Items:       items,
 		},
 	}
 
 	w.Header().Set("Content-Type", "application/rss+xml")
 	if err := xml.NewEncoder(w).Encode(rss); err != nil {
-		logger.Logger.ErrorContext(r.Context(), "Failed to encode RSS feed",
+		logger.Logger.ErrorContext(
+			r.Context(),
+			"Failed to encode RSS feed",
 			"error", err,
-			"posts_count", len(feedPosts))
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			"posts_count", len(posts),
+		)
+		http.Error(w, "Internal Server Error: ihf-xe", http.StatusInternalServerError)
 	}
 }
