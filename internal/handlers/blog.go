@@ -7,56 +7,14 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/victhor/jv-blog/internal/cache"
-	"github.com/victhor/jv-blog/internal/content"
-	"github.com/victhor/jv-blog/internal/logger"
+	"github.com/victhorio/jambe-verte/internal/cache"
+	"github.com/victhorio/jambe-verte/internal/content"
+	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
 type Handler struct {
+	// TODO: Add a way to swap the cache during execution
 	cache *cache.Cache
-}
-
-func (h *Handler) render(ctx context.Context, w http.ResponseWriter, templateFiles []string, data interface{}) {
-	// Check if context is cancelled
-	select {
-	case <-ctx.Done():
-		logger.Logger.WarnContext(ctx, "Request cancelled", "error", ctx.Err())
-		return
-	default:
-	}
-
-	// Parse the template files for this specific request
-	ts, err := template.ParseFiles(templateFiles...)
-	if err != nil {
-		logger.Logger.ErrorContext(ctx, "Template parsing failed",
-			"error", err,
-			"files", templateFiles)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	// Execute the template
-	var buf bytes.Buffer
-	if err := ts.ExecuteTemplate(&buf, "base", data); err != nil {
-		logger.Logger.ErrorContext(ctx, "Template execution failed",
-			"error", err,
-			"template", "base")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	// Check if context is cancelled before writing response
-	select {
-	case <-ctx.Done():
-		logger.Logger.WarnContext(ctx, "Request cancelled before response", "error", ctx.Err())
-		return
-	default:
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if _, err := buf.WriteTo(w); err != nil {
-		logger.Logger.ErrorContext(ctx, "Failed to write response", "error", err)
-	}
 }
 
 func New(cache *cache.Cache) *Handler {
@@ -66,7 +24,7 @@ func New(cache *cache.Cache) *Handler {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	posts := h.cache.GetAllPosts()
+	posts := h.cache.GetPosts()
 
 	// Get recent posts (max 5)
 	recentPosts := posts
@@ -83,16 +41,16 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"templates/base.tmpl",
-		"templates/partials/nav.tmpl",
-		"templates/partials/footer.tmpl",
-		"templates/pages/home.tmpl",
+		"templates/base.html",
+		"templates/partials/nav.html",
+		"templates/partials/footer.html",
+		"templates/pages/home.html",
 	}
 	h.render(r.Context(), w, files, data)
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
-	posts := h.cache.GetAllPosts()
+	posts := h.cache.GetPosts()
 
 	data := struct {
 		Title string
@@ -105,10 +63,10 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"templates/base.tmpl",
-		"templates/partials/nav.tmpl",
-		"templates/partials/footer.tmpl",
-		"templates/pages/list.tmpl",
+		"templates/base.html",
+		"templates/partials/nav.html",
+		"templates/partials/footer.html",
+		"templates/pages/list.html",
 	}
 	h.render(r.Context(), w, files, data)
 }
@@ -130,10 +88,10 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"templates/base.tmpl",
-		"templates/partials/nav.tmpl",
-		"templates/partials/footer.tmpl",
-		"templates/pages/post.tmpl",
+		"templates/base.html",
+		"templates/partials/nav.html",
+		"templates/partials/footer.html",
+		"templates/pages/post.html",
 	}
 	h.render(r.Context(), w, files, data)
 }
@@ -155,10 +113,10 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"templates/base.tmpl",
-		"templates/partials/nav.tmpl",
-		"templates/partials/footer.tmpl",
-		"templates/pages/page.tmpl",
+		"templates/base.html",
+		"templates/partials/nav.html",
+		"templates/partials/footer.html",
+		"templates/pages/page.html",
 	}
 	h.render(r.Context(), w, files, data)
 }
@@ -178,10 +136,10 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"templates/base.tmpl",
-		"templates/partials/nav.tmpl",
-		"templates/partials/footer.tmpl",
-		"templates/pages/list.tmpl",
+		"templates/base.html",
+		"templates/partials/nav.html",
+		"templates/partials/footer.html",
+		"templates/pages/list.html",
 	}
 	h.render(r.Context(), w, files, data)
 }
@@ -197,10 +155,67 @@ func (h *Handler) TestError(w http.ResponseWriter, r *http.Request) {
 
 	// Try to execute template with wrong data - should trigger error
 	files := []string{
-		"templates/base.tmpl",
-		"templates/partials/nav.tmpl",
-		"templates/partials/footer.tmpl",
-		"templates/pages/post.tmpl",
+		"templates/base.html",
+		"templates/partials/nav.html",
+		"templates/partials/footer.html",
+		"templates/pages/post.html",
 	}
 	h.render(r.Context(), w, files, data)
+}
+
+func (h *Handler) render(ctx context.Context, w http.ResponseWriter, templateFiles []string, data interface{}) {
+	// Check if context is cancelled
+	select {
+	case <-ctx.Done():
+		logger.Logger.WarnContext(ctx, "Request cancelled", "error", ctx.Err())
+		return
+	default:
+	}
+
+	// Parse the template files for this specific request
+	ts, err := template.ParseFiles(templateFiles...)
+	if err != nil {
+		logger.Logger.ErrorContext(
+			ctx,
+			"Template parsing failed",
+			"error", err,
+			"files", templateFiles,
+		)
+		http.Error(w, "Internal Server Error: ihr-tp", http.StatusInternalServerError)
+		return
+	}
+
+	// Execute the template
+	var buf bytes.Buffer
+	if err := ts.ExecuteTemplate(&buf, "base", data); err != nil {
+		logger.Logger.ErrorContext(
+			ctx,
+			"Template execution failed",
+			"error", err,
+			"template", "base",
+		)
+		http.Error(w, "Internal Server Error: ihr-tx", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if context is cancelled before writing response
+	select {
+	case <-ctx.Done():
+		logger.Logger.WarnContext(
+			ctx,
+			"Request cancelled before response",
+			"error", ctx.Err(),
+		)
+		return
+	default:
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if _, err := buf.WriteTo(w); err != nil {
+		logger.Logger.ErrorContext(
+			ctx,
+			"Failed to write response",
+			"error", err,
+		)
+	}
 }

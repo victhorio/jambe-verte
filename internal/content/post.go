@@ -11,11 +11,10 @@ type Post struct {
 	Date        time.Time
 	Tags        []string
 	Description string
-	Content     template.HTML
-	Raw         string
+	HTML        template.HTML
 }
 
-type PostMeta struct {
+type PostFrontmatter struct {
 	Title       string   `yaml:"title"`
 	Date        string   `yaml:"date"`
 	Tags        []string `yaml:"tags"`

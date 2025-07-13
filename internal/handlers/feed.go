@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/victhor/jv-blog/internal/logger"
+	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
 type RSS struct {
@@ -29,7 +29,7 @@ type Item struct {
 }
 
 func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
-	posts := h.cache.GetAllPosts()
+	posts := h.cache.GetPosts()
 
 	// Get recent posts (max 20)
 	feedPosts := posts
