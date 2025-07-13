@@ -11,6 +11,7 @@ import (
 	"github.com/victhorio/jambe-verte/internal/content"
 	"github.com/victhorio/jambe-verte/internal/handlers"
 	"github.com/victhorio/jambe-verte/internal/logger"
+	mymiddleware "github.com/victhorio/jambe-verte/internal/middleware"
 )
 
 func main() {
@@ -52,8 +53,13 @@ func main() {
 	r.Get("/blog/{slug}", h.ShowPost)
 	r.Get("/tag/{tag}", h.PostsByTag)
 	r.Get("/feed.xml", h.RSSFeed)
-	r.Post("/admin/refresh", h.AdminRefresh) // Cache refresh endpoint
 	r.Get("/{page}", h.ShowPage)
+
+	// Protected admin routes
+	r.Route("/admin", func(r chi.Router) {
+		r.Use(mymiddleware.AdminAuth)
+		r.Post("/refresh", h.AdminRefresh)
+	})
 
 	// Static files
 	fileServer := http.FileServer(http.Dir("static"))
