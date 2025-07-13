@@ -12,6 +12,7 @@ type Cache struct {
 	pages     map[string]*content.Post
 	tags      map[string][]*content.Post
 	postsFlat []*content.Post
+	pageCache *PageCache
 }
 
 func New(posts []*content.Post, pages []*content.Post) *Cache {
@@ -20,6 +21,7 @@ func New(posts []*content.Post, pages []*content.Post) *Cache {
 		pages:     make(map[string]*content.Post),
 		tags:      make(map[string][]*content.Post),
 		postsFlat: posts,
+		pageCache: NewPageCache(),
 	}
 
 	// For each post, index it by slug on `c.posts` and index it
@@ -54,4 +56,8 @@ func (c *Cache) GetPostsByTag(tag string) []*content.Post {
 
 func (c *Cache) GetPosts() []*content.Post {
 	return c.postsFlat
+}
+
+func (c *Cache) GetPageCache() *PageCache {
+	return c.pageCache
 }

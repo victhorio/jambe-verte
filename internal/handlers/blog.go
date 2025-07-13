@@ -24,6 +24,14 @@ func New(cache *cache.Cache) *Handler {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
+	// Check page cache first
+	pageCache := h.cache.GetPageCache()
+	if cached, ok := pageCache.Get("/"); ok {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(cached)
+		return
+	}
+
 	posts := h.cache.GetPosts()
 
 	// Get recent posts (max 5)
@@ -46,10 +54,18 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/home.html",
 	}
-	h.render(r.Context(), w, files, data)
+	h.renderAndCache(r.Context(), w, "/", files, data)
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
+	// Check page cache first
+	pageCache := h.cache.GetPageCache()
+	if cached, ok := pageCache.Get("/blog"); ok {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(cached)
+		return
+	}
+
 	posts := h.cache.GetPosts()
 
 	data := struct {
@@ -68,11 +84,21 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/list.html",
 	}
-	h.render(r.Context(), w, files, data)
+	h.renderAndCache(r.Context(), w, "/blog", files, data)
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
+
+	// Check page cache first
+	pageCache := h.cache.GetPageCache()
+	cachePath := "/blog/" + slug
+	if cached, ok := pageCache.Get(cachePath); ok {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(cached)
+		return
+	}
+
 	post, ok := h.cache.GetPost(slug)
 	if !ok {
 		http.NotFound(w, r)
@@ -93,11 +119,21 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/post.html",
 	}
-	h.render(r.Context(), w, files, data)
+	h.renderAndCache(r.Context(), w, cachePath, files, data)
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "page")
+
+	// Check page cache first
+	pageCache := h.cache.GetPageCache()
+	cachePath := "/" + slug
+	if cached, ok := pageCache.Get(cachePath); ok {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(cached)
+		return
+	}
+
 	page, ok := h.cache.GetPage(slug)
 	if !ok {
 		http.NotFound(w, r)
@@ -118,11 +154,21 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/page.html",
 	}
-	h.render(r.Context(), w, files, data)
+	h.renderAndCache(r.Context(), w, cachePath, files, data)
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	tag := chi.URLParam(r, "tag")
+
+	// Check page cache first
+	pageCache := h.cache.GetPageCache()
+	cachePath := "/tag/" + tag
+	if cached, ok := pageCache.Get(cachePath); ok {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(cached)
+		return
+	}
+
 	posts := h.cache.GetPostsByTag(tag)
 
 	data := struct {
@@ -141,29 +187,10 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		"templates/partials/footer.html",
 		"templates/pages/list.html",
 	}
-	h.render(r.Context(), w, files, data)
+	h.renderAndCache(r.Context(), w, cachePath, files, data)
 }
 
-// Test endpoint to trigger template error
-func (h *Handler) TestError(w http.ResponseWriter, r *http.Request) {
-	// This will cause a template error because we're passing wrong data structure
-	data := struct {
-		WrongField string
-	}{
-		WrongField: "This will break the template",
-	}
-
-	// Try to execute template with wrong data - should trigger error
-	files := []string{
-		"templates/base.html",
-		"templates/partials/nav.html",
-		"templates/partials/footer.html",
-		"templates/pages/post.html",
-	}
-	h.render(r.Context(), w, files, data)
-}
-
-func (h *Handler) render(ctx context.Context, w http.ResponseWriter, templateFiles []string, data interface{}) {
+func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, path string, templateFiles []string, data any) {
 	// Check if context is cancelled
 	select {
 	case <-ctx.Done():
@@ -172,7 +199,7 @@ func (h *Handler) render(ctx context.Context, w http.ResponseWriter, templateFil
 	default:
 	}
 
-	// Parse the template files for this specific request
+	// Parse the template files
 	ts, err := template.ParseFiles(templateFiles...)
 	if err != nil {
 		logger.Logger.ErrorContext(
@@ -198,6 +225,11 @@ func (h *Handler) render(ctx context.Context, w http.ResponseWriter, templateFil
 		return
 	}
 
+	// Cache the rendered content
+	content := buf.Bytes()
+	pageCache := h.cache.GetPageCache()
+	pageCache.Set(path, content)
+
 	// Check if context is cancelled before writing response
 	select {
 	case <-ctx.Done():
@@ -211,10 +243,10 @@ func (h *Handler) render(ctx context.Context, w http.ResponseWriter, templateFil
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if _, err := buf.WriteTo(w); err != nil {
+	if _, err := w.Write(content); err != nil {
 		logger.Logger.ErrorContext(
 			ctx,
-			"Failed to write response",
+			"Failed to write cached response",
 			"error", err,
 		)
 	}
