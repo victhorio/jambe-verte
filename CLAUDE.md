@@ -14,16 +14,17 @@ This is a Go-based blog application built with the chi router. The architecture 
    - Parses YAML frontmatter for metadata (title, date, tags, description)
    - Posts follow naming: `YYYY-MM-DD-slug.md`
    - Content is cached in memory at startup via `internal/cache/`
+   - Rendered pages are cached for performance
 
 3. **HTTP Handlers** (`internal/handlers/`):
 
-   - `HomeHandler`: Shows 5 most recent posts
-   - `BlogHandler`: Lists all blog posts
-   - `PostHandler`: Renders individual posts
-   - `TagHandler`: Filters posts by tag
-   - `FeedHandler`: Generates RSS feed
-   - `PageHandler`: Serves static pages
-   - etc
+   - `Home`: Serves the About page content on the home route
+   - `ListPosts`: Lists all blog posts
+   - `ShowPost`: Renders individual posts
+   - `PostsByTag`: Filters posts by tag
+   - `RSSFeed`: Generates RSS feed (max 20 recent posts)
+   - `ShowPage`: Serves static pages
+   - `AdminRefresh`: Hot-reloads content and rebuilds CSS
 
 4. **Templates** (`templates/`): Go HTML templates with partials for reusable components
 
@@ -33,17 +34,18 @@ This is a Go-based blog application built with the chi router. The architecture 
    - Panic recovery
    - 60-second timeout
    - gzip compression (level 5)
+   - Admin auth (for protected routes only)
 
 ### Routing Structure
 
-- `/` - Home page
+- `/` - Home page (displays About page content)
 - `/posts` - Blog listing
 - `/blog/{slug}` - Individual post
 - `/tag/{tag}` - Posts by tag
 - `/feed.xml` - RSS feed
 - `/{page}` - Static pages (e.g., /about)
 - `/static/*` - Static assets
-- etc
+- `/admin/refresh` - Hot-reload content (protected)
 
 ## Development Guidelines
 
@@ -51,11 +53,13 @@ This is a Go-based blog application built with the chi router. The architecture 
 
 2. **Logging**: Use the logger from `internal/logger/` which outputs structured JSON to stderr.
 
-3. **Error Handling**: Return appropriate HTTP status codes. The middleware handles panic recovery.
+3. **Hot Reloading**: Use `/admin/refresh` endpoint to reload content and rebuild CSS without restarting the server.
 
-4. **Templates**: When modifying templates, ensure partials are properly included using `{{template "partial-name" .}}`
+4. **Error Handling**: Return appropriate HTTP status codes. The middleware handles panic recovery.
 
-5. **Static Assets**: Place CSS in `static/css/` and JavaScript in `static/js/`. They're served from `/static/`.
+5. **Templates**: When modifying templates, ensure partials are properly included using `{{template "partial-name" .}}`
+
+6. **Static Assets**: Place CSS in `static/css/` and JavaScript in `static/js/`. They're served from `/static/`.
 
 ## Testing
 
@@ -116,6 +120,7 @@ The project uses minimal dependencies:
 - `chi/v5` for HTTP routing
 - `goldmark` for markdown parsing
 - `goldmark-meta` for YAML frontmatter
+- `goldmark-highlighting` for syntax highlighting
 - `goccy/go-yaml` for YAML parsing
 
 Frontend uses Alpine.js loaded from CDN.
