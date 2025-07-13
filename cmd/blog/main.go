@@ -52,6 +52,7 @@ func main() {
 	r.Get("/blog/{slug}", h.ShowPost)
 	r.Get("/tag/{tag}", h.PostsByTag)
 	r.Get("/feed.xml", h.RSSFeed)
+	r.Post("/admin/refresh", h.AdminRefresh) // Cache refresh endpoint
 	r.Get("/{page}", h.ShowPage)
 
 	// Static files

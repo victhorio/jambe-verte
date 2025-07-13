@@ -5,6 +5,7 @@ import (
 	"context"
 	"html/template"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,7 +15,7 @@ import (
 )
 
 type Handler struct {
-	// TODO: Add a way to swap the cache during execution
+	mu    sync.RWMutex
 	cache *cache.Cache
 }
 
@@ -24,16 +25,29 @@ func New(cache *cache.Cache) *Handler {
 	}
 }
 
+func (h *Handler) getCache() *cache.Cache {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.cache
+}
+
+func (h *Handler) setCache(cache *cache.Cache) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.cache = cache
+}
+
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	// Check page cache first
-	pageCache := h.cache.GetPageCache()
+	cache := h.getCache()
+	pageCache := cache.GetPageCache()
 	if cached, ok := pageCache.Get("/"); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(cached)
 		return
 	}
 
-	posts := h.cache.GetPosts()
+	posts := cache.GetPosts()
 
 	// Get recent posts (max 5)
 	recentPosts := posts
@@ -60,14 +74,15 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	// Check page cache first
-	pageCache := h.cache.GetPageCache()
+	cache := h.getCache()
+	pageCache := cache.GetPageCache()
 	if cached, ok := pageCache.Get("/blog"); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(cached)
 		return
 	}
 
-	posts := h.cache.GetPosts()
+	posts := cache.GetPosts()
 
 	data := struct {
 		Title string
@@ -92,7 +107,8 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 
 	// Check page cache first
-	pageCache := h.cache.GetPageCache()
+	cache := h.getCache()
+	pageCache := cache.GetPageCache()
 	cacheRoute := "/blog/" + slug
 	if cached, ok := pageCache.Get(cacheRoute); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -100,7 +116,7 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, ok := h.cache.GetPost(slug)
+	post, ok := cache.GetPost(slug)
 	if !ok {
 		http.NotFound(w, r)
 		return
@@ -127,7 +143,8 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "page")
 
 	// Check page cache first
-	pageCache := h.cache.GetPageCache()
+	cache := h.getCache()
+	pageCache := cache.GetPageCache()
 	cacheRoute := "/" + slug
 	if cached, ok := pageCache.Get(cacheRoute); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -135,7 +152,7 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page, ok := h.cache.GetPage(slug)
+	page, ok := cache.GetPage(slug)
 	if !ok {
 		http.NotFound(w, r)
 		return
@@ -162,7 +179,8 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	tag := chi.URLParam(r, "tag")
 
 	// Check page cache first
-	pageCache := h.cache.GetPageCache()
+	cache := h.getCache()
+	pageCache := cache.GetPageCache()
 	cacheRoute := "/tag/" + tag
 	if cached, ok := pageCache.Get(cacheRoute); ok {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -170,7 +188,7 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts := h.cache.GetPostsByTag(tag)
+	posts := cache.GetPostsByTag(tag)
 
 	data := struct {
 		Title string
@@ -189,6 +207,39 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		"templates/pages/list.html",
 	}
 	h.renderAndCache(r.Context(), w, cacheRoute, files, data)
+}
+
+// AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
+// and replacing it on the handler.
+func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Load posts
+	posts, err := content.LoadPosts("content/posts", true)
+	if err != nil {
+		logger.Logger.ErrorContext(ctx, "Error loading posts during refresh", "error", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		http.Error(w, "Failed to load posts: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Load pages
+	pages, err := content.LoadPosts("content/pages", false)
+	if err != nil {
+		logger.Logger.ErrorContext(ctx, "Error loading pages during refresh", "error", err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		http.Error(w, "Failed to load pages: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Create new cache and replace the old one
+	newCache := cache.New(posts, pages)
+	h.setCache(newCache)
+
+	logger.Logger.InfoContext(ctx, "Cache refreshed successfully", "posts", len(posts), "pages", len(pages))
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write([]byte("OK"))
 }
 
 func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, route string, templateFiles []string, data any) {
@@ -233,7 +284,8 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, rou
 
 	// Cache the rendered content
 	content := buf.Bytes()
-	pageCache := h.cache.GetPageCache()
+	cache := h.getCache()
+	pageCache := cache.GetPageCache()
 	pageCache.Set(route, content)
 
 	// Check if context is cancelled before writing response
