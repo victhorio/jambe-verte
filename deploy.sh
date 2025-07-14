@@ -39,7 +39,7 @@ cp -r content "$DEPLOY_DIR/"
 # Step 4: Create deployment package
 echo -e "${YELLOW}[4/6] Creating deployment package...${NC}"
 cd "$BUILD_DIR"
-tar -czf "$PACKAGE_NAME" deploy/
+COPYFILE_DISABLE=1 tar -czf "$PACKAGE_NAME" --exclude='._*' --exclude='.DS_Store' deploy/
 cd ..
 
 # Step 5: Transfer to server
