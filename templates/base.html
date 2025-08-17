@@ -1,97 +1,101 @@
 {{define "base"}}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      {{template "title" .}} - Jambe Verte
-    </title>
 
-    <link rel="stylesheet" href="/static/css/output.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    {{template "title" .}} - Jambe Verte
+  </title>
 
-    {{if .DebugMode}}
-    <!-- Debug Mode: include CDN classes so they're available without compilation -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      // We're only bringing the CDN in in debug mode so that classes not included in output.css
-      // are still available for quick iteration. We already have pre-compiled preflight with our
-      // own CSS, so we disable it to avoid it overriding our stuff.
-      tailwind.config = {
-        corePlugins: {
-          preflight: false,
-        },
-      };
-    </script>
-    {{end}}
-  </head>
+  <link rel="stylesheet" href="/static/css/output.css" />
 
-  <body class="min-h-screen bg-white">
-    <!-- Small screen warning (shows only on screens < 360px) -->
-    <div class="min-[360px]:hidden flex min-h-screen items-center justify-center p-4">
-      <div class="text-center">
-        <h1 class="text-lg font-bold tracking-tight text-gray-900 mb-4">Screen Too Small</h1>
-        <p class="text-gray-600 text-sm leading-relaxed">
-          This website is optimized for screens 360px and wider. Rotate your device or use a larger screen to see the content.
-        </p>
-      </div>
+  {{if .DebugMode}}
+  <!-- Debug Mode: include CDN classes so they're available without compilation -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // We're only bringing the CDN in in debug mode so that classes not included in output.css
+    // are still available for quick iteration. We already have pre-compiled preflight with our
+    // own CSS, so we disable it to avoid it overriding our stuff.
+    tailwind.config = {
+      corePlugins: {
+        preflight: false,
+      },
+    };
+  </script>
+  {{end}}
+</head>
+
+<body class="min-h-screen bg-white">
+  <!-- Small screen warning (shows only on screens < 360px) -->
+  <div class="min-[360px]:hidden flex min-h-screen items-center justify-center p-4">
+    <div class="text-center">
+      <h1 class="text-lg font-bold tracking-tight text-gray-900 mb-4">Screen Too Small</h1>
+      <p class="text-gray-600 text-sm leading-relaxed">
+        This website is optimized for screens 360px and wider. Rotate your device or use a larger screen to see the
+        content.
+      </p>
     </div>
+  </div>
 
-    <div class="max-[359px]:hidden max-w-4xl mx-auto px-4 py-2">
-      <!-- Header/Navigation -->
-      <nav class="mx-auto px-4 py-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+  <div class="max-[359px]:hidden max-w-4xl mx-auto px-4 py-2">
+    <!-- Header/Navigation -->
+    <nav class="mx-auto px-4 py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
 
-          <!-- Title -->
-          <h1 class="text-xl font-bold text-gray-900 tracking-tighter uppercase mb-2 sm:mb-0">
-            Jambe Verte
-            <span class="text-sm text-gray-600 tracking-tight">by Victhor Sartório</span>
-          </h1>
+        <!-- Title -->
+        <h1 class="text-xl font-bold text-gray-900 tracking-tighter uppercase mb-2 sm:mb-0">
+          Jambe Verte
+          <span class="text-sm text-gray-600 tracking-tight">by Victhor Sartório</span>
+        </h1>
 
-          <!-- Navigation -->
-          <div class="flex space-x-4 tracking-tight self-end">
-            <a href="/about" class="text-gray-600 hover:text-gray-900 underline">About</a>
-            <a href="/posts" class="text-gray-600 hover:text-gray-900 underline">Posts</a>
-            <a href="https://github.com/victhorio" class="text-gray-600 hover:text-gray-900 underline">GitHub</a>
-          </div>
+        <!-- Navigation -->
+        <div class="flex space-x-4 tracking-tight self-end">
+          <a href="/" class="text-gray-600 hover:text-gray-900 underline">About</a>
+          <a href="/" class="text-gray-600 hover:text-gray-900 underline">Posts</a>
+          <a href="https://github.com/victhorio" class="text-gray-600 hover:text-gray-900 underline">GitHub</a>
         </div>
+      </div>
 
-        <!-- Divider -->
-        <hr class="solid border-gray-400" />
-      </nav>
+      <!-- Divider -->
+      <hr class="solid border-gray-400" />
+    </nav>
 
-      <!-- Main content -->
-      <main>{{template "main" .}}</main>
+    <!-- Main content -->
+    <main>{{template "main" .}}</main>
+
+    <!-- Footer -->
+    <footer class="mt-1 mx-auto px-4 py-4">
+      <!-- Divider -->
+      <hr class="solid border-gray-400" />
 
       <!-- Footer -->
-      <footer class="mt-8 mx-auto px-4 py-4">
-        <!-- Divider -->
-        <hr class="solid border-gray-400" />
-       
-        <!-- Footer -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 uppercase tracking-tight">
-          <!-- Copyright -->
-          <div>
-            &copy; 2025 Victhor Sartório. <span class="whitespace-nowrap">All rights reserved.</span>
-          </div>
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 uppercase tracking-tight">
+        <!-- Copyright -->
+        <div>
+          &copy; 2025 Victhor Sartório. <span class="whitespace-nowrap">All rights reserved.</span>
+        </div>
 
-          <!-- Blog version -->
-          <div class="mt-1 sm:mt-0">
-            <div class="tracking-tighter inline-flex gap-x-0">
-              <span>JV-SERVER&nbsp;</span>
-              {{if .DebugMode}}
-                <span class="text-red-600 font-bold">DBG</span>
-              {{else}}
-                <span class="text-green-700 font-bold">PRD</span>
-              {{end}}
-              /{{.Version}}
-            </div>
+        <!-- Blog version -->
+        <div class="mt-1 sm:mt-0">
+          <div class="tracking-tighter inline-flex gap-x-0">
+            <span>JV-SERVER&nbsp;</span>
+            {{if .DebugMode}}
+            <span class="text-red-600 font-bold">DBG</span>
+            {{else}}
+            <span class="text-green-700 font-bold">PRD</span>
+            {{end}}
+            /{{.Version}}
           </div>
         </div>
-      </footer>
-    </div>
+      </div>
+    </footer>
+  </div>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  </body>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+
 </html>
 {{end}}
