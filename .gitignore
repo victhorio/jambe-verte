@@ -50,6 +50,9 @@ Thumbs.db
 # Node.js dependencies
 node_modules/
 
+# Generated CSS files
+static/css/output.css
+
 # Claude AI assistant files
 .claude/
 .claude.md
