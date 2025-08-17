@@ -7,17 +7,34 @@
     <title>{{template "title" .}} - Jambe Verte</title>
     <link rel="stylesheet" href="/static/css/output.css">
 </head>
-<body class="min-h-screen flex flex-col md:flex-row">
-    {{template "nav" .}}
-    
-    <main class="flex-1 px-6 py-8 md:px-8 md:py-12">
-        <div class="lg:-ml-16">
-            <div class="max-w-content mx-auto">
-                {{template "main" .}}
+<body class="min-h-screen bg-white">
+    <nav class="border-b border-gray-200 bg-white">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold text-gray-900">Jambe Verte</h1>
+                <div class="flex space-x-6">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">About</a>
+                    <a href="/posts" class="text-gray-600 hover:text-gray-900">Posts</a>
+                </div>
             </div>
         </div>
-
-        {{template "footer" .}}
+    </nav>
+    
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        {{template "main" .}}
+        <footer class="mt-8 pt-8 border-t border-gray-200">
+            <div class="flex items-center justify-between text-sm text-gray-600">
+                <div>
+                    &copy; 2025 Victhor Sartório. All rights reserved.
+                </div>
+                <div class="flex space-x-4">
+                    <a href="mailto:victhor@victhor.io" class="hover:text-gray-900">Email</a>
+                    <a href="https://twitter.com/csvicthor" class="hover:text-gray-900">Twitter</a>
+                    <a href="https://github.com/victhorio" class="hover:text-gray-900">GitHub</a>
+                    <a href="https://linkedin.com/in/victhorio" class="hover:text-gray-900">LinkedIn</a>
+                </div>
+            </div>
+        </footer>
     </main>
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

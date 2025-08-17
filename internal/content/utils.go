@@ -7,6 +7,15 @@ import (
 	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
+const (
+	InternalErrorTemplate = `Internal Server Error
+=====================
+
+Contact site administrator.
+
+Error Code: %s`
+)
+
 func RebuildCSS(ctx context.Context) {
 	logger.Logger.InfoContext(ctx, "Rebuilding CSS...")
 

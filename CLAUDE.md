@@ -26,7 +26,7 @@ This is a Go-based blog application built with the chi router. The architecture 
    - `ShowPage`: Serves static pages
    - `AdminRefresh`: Hot-reloads content and rebuilds CSS
 
-4. **Templates** (`templates/`): Go HTML templates with partials for reusable components
+4. **Templates** (`templates/`): Go HTML templates with a consolidated base layout
 
 5. **Middleware Stack** (order matters):
    - Request ID generation
@@ -57,7 +57,7 @@ This is a Go-based blog application built with the chi router. The architecture 
 
 4. **Error Handling**: Return appropriate HTTP status codes. The middleware handles panic recovery.
 
-5. **Templates**: When modifying templates, ensure partials are properly included using `{{template "partial-name" .}}`
+5. **Templates**: The base template (`templates/base.html`) contains the complete page structure including nav and footer. Individual page templates define `title` and `main` blocks.
 
 6. **Static Assets**: Place CSS in `static/css/` and JavaScript in `static/js/`. They're served from `/static/`.
 
