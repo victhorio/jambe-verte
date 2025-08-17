@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/victhorio/jambe-verte/internal"
 	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
@@ -19,7 +20,7 @@ func AdminAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if adminToken == "" {
 			logger.Logger.ErrorContext(r.Context(), "JV_ADMIN_TOKEN environment variable not set")
-			http.Error(w, "Internal Server Error: ima-mt", http.StatusInternalServerError)
+			internal.WriteInternalError(w, "JVE-IMA-MT")
 			return
 		}
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/victhorio/jambe-verte/internal"
 	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
@@ -74,6 +75,6 @@ func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 			"posts_count", len(posts),
 		)
-		http.Error(w, "Internal Server Error: ihf-xe", http.StatusInternalServerError)
+		internal.WriteInternalError(w, "JVE-IHF-XE")
 	}
 }

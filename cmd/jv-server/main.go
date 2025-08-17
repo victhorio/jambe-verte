@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +17,12 @@ import (
 
 func main() {
 	ctx := context.Background()
+
+	// Check if debug mode is enabled
+	debugMode := os.Getenv("JV_DEBUG") == "1"
+	if debugMode {
+		logger.Logger.WarnContext(ctx, "===== Debug mode enabled =====")
+	}
 
 	// Load posts
 	posts, err := content.LoadPosts("content/posts", true)
@@ -35,7 +42,7 @@ func main() {
 	c := cache.New(posts, pages)
 
 	// Create handlers
-	h := handlers.New(c)
+	h := handlers.New(c, debugMode)
 
 	// Setup routes
 	r := chi.NewRouter()
@@ -58,7 +65,9 @@ func main() {
 
 	// Protected admin routes
 	r.Route("/admin", func(r chi.Router) {
-		r.Use(mymiddleware.AdminAuth)
+		if !debugMode {
+			r.Use(mymiddleware.AdminAuth)
+		}
 		r.Post("/refresh", h.AdminRefresh)
 	})
 

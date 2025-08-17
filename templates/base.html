@@ -1,43 +1,89 @@
 {{define "base"}}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{template "title" .}} - Jambe Verte</title>
-    <link rel="stylesheet" href="/static/css/output.css">
-</head>
-<body class="min-h-screen bg-white">
-    <nav class="border-b border-gray-200 bg-white">
-        <div class="max-w-4xl mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <h1 class="text-xl font-bold text-gray-900">Jambe Verte</h1>
-                <div class="flex space-x-6">
-                    <a href="/" class="text-gray-600 hover:text-gray-900">About</a>
-                    <a href="/posts" class="text-gray-600 hover:text-gray-900">Posts</a>
-                </div>
-            </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {{template "title" .}} - Jambe Verte
+    </title>
+
+    <link rel="stylesheet" href="/static/css/output.css" />
+
+    {{if .DebugMode}}
+    <!-- Debug Mode: include CDN classes so they're available without compilation -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // We're only bringing the CDN in in debug mode so that classes not included in output.css
+      // are still available for quick iteration. We already have pre-compiled preflight with our
+      // own CSS, so we disable it to avoid it overriding our stuff.
+      tailwind.config = {
+        corePlugins: {
+          preflight: false,
+        },
+      };
+    </script>
+    {{end}}
+  </head>
+
+  <body class="min-h-screen bg-white">
+    <div class="max-w-4xl mx-auto px-4 py-2">
+      <!-- Header/Navigation -->
+      <nav class="mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+
+          <!-- Title -->
+          <h1 class="text-xl font-bold text-gray-900 tracking-tighter uppercase">
+            Jambe Verte
+            <span class="text-sm text-gray-600 tracking-tight">by Victhor Sartório</span>
+          </h1>
+
+          <!-- Navigation -->
+          <div class="flex space-x-6">
+            <a href="/" class="text-gray-600 hover:text-gray-900">About</a>
+            <a href="/posts" class="text-gray-600 hover:text-gray-900">Posts</a>
+          </div>
         </div>
-    </nav>
-    
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        {{template "main" .}}
-        <footer class="mt-8 pt-8 border-t border-gray-200">
-            <div class="flex items-center justify-between text-sm text-gray-600">
-                <div>
-                    &copy; 2025 Victhor Sartório. All rights reserved.
-                </div>
-                <div class="flex space-x-4">
-                    <a href="mailto:victhor@victhor.io" class="hover:text-gray-900">Email</a>
-                    <a href="https://twitter.com/csvicthor" class="hover:text-gray-900">Twitter</a>
-                    <a href="https://github.com/victhorio" class="hover:text-gray-900">GitHub</a>
-                    <a href="https://linkedin.com/in/victhorio" class="hover:text-gray-900">LinkedIn</a>
-                </div>
+
+        <!-- Divider -->
+        <hr class="solid border-gray-400" />
+      </nav>
+
+      <!-- Main content -->
+      <main>{{template "main" .}}</main>
+
+      <!-- Footer -->
+      <footer class="mt-8 mx-auto px-4 py-4">
+        <!-- Divider -->
+        <hr class="solid border-gray-400" />
+       
+        <!-- Footer -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 uppercase tracking-tight">
+          <!-- Copyright -->
+          <div>
+            &copy; 2025 Victhor Sartório. All rights reserved. Follow me on <a href="https://github.com/victhorio" class="hover:text-gray-900 underline">GitHub</a>.
+          </div>
+
+          <!-- Blog version -->
+          <div class="mt-1 md:mt-0">
+            <div class="tracking-tighter inline-flex gap-x-0">
+              <span>JV-SERVER&nbsp;</span>
+              {{if .DebugMode}}
+                <span class="text-red-600 font-bold">DBG</span>
+              {{else}}
+                <span class="text-green-700 font-bold">PRD</span>
+              {{end}}
+              /{{.Version}}
             </div>
-        </footer>
-    </main>
-    
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-</body>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </body>
 </html>
 {{end}}

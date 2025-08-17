@@ -3,26 +3,28 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 	"net/http"
 	"sync"
 	"time"
 
 	// "github.com/go-chi/chi/v5"
+	"github.com/victhorio/jambe-verte/internal"
 	"github.com/victhorio/jambe-verte/internal/cache"
 	"github.com/victhorio/jambe-verte/internal/content"
 	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
 type Handler struct {
-	mu    sync.RWMutex
-	cache *cache.Cache
+	mu        sync.RWMutex
+	cache     *cache.Cache
+	debugMode bool
 }
 
-func New(cache *cache.Cache) *Handler {
+func New(cache *cache.Cache, debugMode bool) *Handler {
 	return &Handler{
-		cache: cache,
+		cache:     cache,
+		debugMode: debugMode,
 	}
 }
 
@@ -39,13 +41,15 @@ func (h *Handler) setCache(cache *cache.Cache) {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	// Check page cache first
-	cache := h.getCache()
-	pageCache := cache.GetPageCache()
-	if cached, ok := pageCache.Get("/"); ok {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write(cached)
-		return
+	// Check page cache first, unless we're in debug mode
+	if !h.debugMode {
+		cache := h.getCache()
+		pageCache := cache.GetPageCache()
+		if cached, ok := pageCache.Get("/"); ok {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(cached)
+			return
+		}
 	}
 
 	files := []string{
@@ -57,22 +61,22 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("TODO: Posts listing"))
+	w.Write([]byte("WIP: Posts listing not yet implemented. Return later."))
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("TODO: Individual post view"))
+	w.Write([]byte("WIP: Individual post view not yet implemented. Return later."))
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("TODO: Static page view"))
+	w.Write([]byte("WIP: Static page view not yet implemented. Return later."))
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("TODO: Posts by tag view"))
+	w.Write([]byte("WIP: Posts by tag view not yet implemented. Return later."))
 }
 
 // AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
@@ -85,7 +89,7 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Logger.ErrorContext(ctx, "Error loading posts during refresh", "error", err)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		http.Error(w, "Failed to load posts: "+err.Error(), http.StatusInternalServerError)
+		internal.WriteInternalError(w, "JVE-IHB-PO")
 		return
 	}
 
@@ -94,7 +98,7 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Logger.ErrorContext(ctx, "Error loading pages during refresh", "error", err)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		http.Error(w, "Failed to load pages: "+err.Error(), http.StatusInternalServerError)
+		internal.WriteInternalError(w, "JVE-IHB-PA")
 		return
 	}
 
@@ -131,31 +135,37 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, rou
 			"error", err,
 			"files", templateFiles,
 		)
-		http.Error(w, fmt.Sprintf(content.InternalErrorTemplate, "JVE-IHB-TP"), http.StatusInternalServerError)
+		internal.WriteInternalError(w, "JVE-IHB-TP")
 		return
 	}
 
 	// Execute the template
 	var buf bytes.Buffer
-	if err := ts.ExecuteTemplate(&buf, "base", data); err != nil {
+	if err := ts.ExecuteTemplate(&buf, "base", map[string]any{
+		"DebugMode": h.debugMode,
+		"Version":   internal.Version,
+		"Data":      data,
+	}); err != nil {
 		logger.Logger.ErrorContext(
 			ctx,
 			"Template execution failed",
 			"error", err,
 			"template", "base",
 		)
-		http.Error(w, fmt.Sprintf(content.InternalErrorTemplate, "JVE-IHB-TX"), http.StatusInternalServerError)
+		internal.WriteInternalError(w, "JVE-IHB-TX")
 		return
 	}
 
 	duration := time.Since(startTime)
 	logger.Logger.InfoContext(ctx, "Rendered route in cold path", "route", route, "duration", duration.String())
 
-	// Cache the rendered content
+	// Cache the rendered content (skip caching in debug mode)
 	content := buf.Bytes()
-	cache := h.getCache()
-	pageCache := cache.GetPageCache()
-	pageCache.Set(route, content)
+	if !h.debugMode {
+		cache := h.getCache()
+		pageCache := cache.GetPageCache()
+		pageCache.Set(route, content)
+	}
 
 	// Check if context is cancelled before writing response
 	select {

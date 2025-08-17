@@ -9,9 +9,6 @@ module.exports = {
       fontFamily: {
         'sans': ['Berkeley Mono', 'monospace'],
       },
-      maxWidth: {
-        'content': '650px',
-      },
     },
   },
   plugins: [],
