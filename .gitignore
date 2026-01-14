@@ -57,7 +57,8 @@ static/css/output.css
 static/fonts/*.woff2
 
 # Claude AI assistant files
-.claude/
+.claude/*
+!.claude/skills/
 .claude.md
 
 # Temporary files
