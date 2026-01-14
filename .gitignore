@@ -53,6 +53,9 @@ node_modules/
 # Generated CSS files
 static/css/output.css
 
+# Licensed fonts (keep locally, don't commit)
+static/fonts/*.woff2
+
 # Claude AI assistant files
 .claude/
 .claude.md
