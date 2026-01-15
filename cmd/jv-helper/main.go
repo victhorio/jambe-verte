@@ -48,13 +48,13 @@ func createContent(contentType, slug string) error {
 		return fmt.Errorf("directory does not exist: %s", dir)
 	}
 
-	filepath := filepath.Join(dir, filename)
-	if _, err := os.Stat(filepath); err == nil {
-		return fmt.Errorf("file already exists: %s", filepath)
+	outputPath := filepath.Join(dir, filename)
+	if _, err := os.Stat(outputPath); err == nil {
+		return fmt.Errorf("file already exists: %s", outputPath)
 	}
 
-	if err := os.WriteFile(filepath, []byte(content), 0644); err != nil {
-		return fmt.Errorf("failed to write file %s: %w", filepath, err)
+	if err := os.WriteFile(outputPath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write file %s: %w", outputPath, err)
 	}
 
 	return nil
