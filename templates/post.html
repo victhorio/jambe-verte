@@ -1,0 +1,26 @@
+{{define "title"}}{{.Data.Title}}{{end}}
+
+{{define "main"}}
+<article class="px-4">
+  <header class="mb-6">
+    <h1 class="text-xl font-bold tracking-tighter uppercase">{{.Data.Title}}</h1>
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-gray-500">
+      <time class="font-mono" datetime="{{.Data.Date.Format "2006-01-02"}}">
+        {{.Data.Date.Format "2006-01-02"}}
+      </time>
+      {{if .Data.Tags}}
+      <span class="text-gray-300">|</span>
+      <div class="flex flex-wrap gap-2">
+        {{range .Data.Tags}}
+        <a href="/tag/{{.}}" class="hover:text-gray-900">#{{.}}</a>
+        {{end}}
+      </div>
+      {{end}}
+    </div>
+  </header>
+
+  <div class="post-content mt-6">
+    {{.Data.HTML}}
+  </div>
+</article>
+{{end}}

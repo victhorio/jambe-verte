@@ -1,0 +1,40 @@
+{{define "title"}}{{if .Data.Tag}}#{{.Data.Tag}}{{else}}Posts{{end}}{{end}}
+
+{{define "main"}}
+<div class="px-4">
+  {{if .Data.Tag}}
+  <h1 class="text-xl font-bold tracking-tighter uppercase mb-4">Posts tagged #{{.Data.Tag}}</h1>
+  {{else}}
+  <h1 class="text-xl font-bold tracking-tighter uppercase mb-4">All Posts</h1>
+  {{end}}
+
+  {{if .Data.Posts}}
+  <ul class="space-y-4">
+    {{range .Data.Posts}}
+    <li class="border-b border-gray-300 pb-4 last:border-b-0">
+      <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+        <time class="text-sm text-gray-500 font-mono shrink-0" datetime="{{.Date.Format "2006-01-02"}}">
+          {{.Date.Format "2006-01-02"}}
+        </time>
+        <a href="/blog/{{.Slug}}" class="text-gray-900 font-bold tracking-tight hover:underline">
+          {{.Title}}
+        </a>
+      </div>
+      {{if .Description}}
+      <p class="text-sm text-gray-600 mt-1">{{.Description}}</p>
+      {{end}}
+      {{if .Tags}}
+      <div class="flex flex-wrap gap-2 mt-2">
+        {{range .Tags}}
+        <a href="/tag/{{.}}" class="text-xs text-gray-500 hover:text-gray-900">#{{.}}</a>
+        {{end}}
+      </div>
+      {{end}}
+    </li>
+    {{end}}
+  </ul>
+  {{else}}
+  <p class="text-gray-600">No posts found.</p>
+  {{end}}
+</div>
+{{end}}

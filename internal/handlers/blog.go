@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	// "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
 	"github.com/victhorio/jambe-verte/internal"
 	"github.com/victhorio/jambe-verte/internal/cache"
 	"github.com/victhorio/jambe-verte/internal/content"
@@ -19,6 +19,11 @@ type Handler struct {
 	mu        sync.RWMutex
 	cache     *cache.Cache
 	debugMode bool
+}
+
+type PostsPageData struct {
+	Posts []*content.Post
+	Tag   string
 }
 
 func New(cache *cache.Cache, debugMode bool) *Handler {
@@ -60,23 +65,115 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("WIP: Posts listing not yet implemented. Return later."))
+	// Check page cache first, unless we're in debug mode
+	if !h.debugMode {
+		cache := h.getCache()
+		pageCache := cache.GetPageCache()
+		if cached, ok := pageCache.Get("/posts"); ok {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(cached)
+			return
+		}
+	}
+
+	data := PostsPageData{
+		Posts: h.getCache().GetPosts(),
+	}
+
+	files := []string{
+		"templates/base.html",
+		"templates/posts.html",
+	}
+	h.renderAndCache(r.Context(), w, "/posts", files, data)
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("WIP: Individual post view not yet implemented. Return later."))
+	slug := chi.URLParam(r, "slug")
+	cache := h.getCache()
+
+	post, ok := cache.GetPost(slug)
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Check page cache first, unless we're in debug mode
+	route := "/blog/" + slug
+	if !h.debugMode {
+		pageCache := cache.GetPageCache()
+		if cached, ok := pageCache.Get(route); ok {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(cached)
+			return
+		}
+	}
+
+	files := []string{
+		"templates/base.html",
+		"templates/post.html",
+	}
+	h.renderAndCache(r.Context(), w, route, files, post)
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("WIP: Static page view not yet implemented. Return later."))
+	slug := chi.URLParam(r, "page")
+	cache := h.getCache()
+
+	page, ok := cache.GetPage(slug)
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Check page cache first, unless we're in debug mode
+	route := "/" + slug
+	if !h.debugMode {
+		pageCache := cache.GetPageCache()
+		if cached, ok := pageCache.Get(route); ok {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(cached)
+			return
+		}
+	}
+
+	files := []string{
+		"templates/base.html",
+		"templates/page.html",
+	}
+	h.renderAndCache(r.Context(), w, route, files, page)
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte("WIP: Posts by tag view not yet implemented. Return later."))
+	tag := chi.URLParam(r, "tag")
+	cache := h.getCache()
+
+	posts := cache.GetPostsByTag(tag)
+	if len(posts) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Check page cache first, unless we're in debug mode
+	route := "/tag/" + tag
+	if !h.debugMode {
+		pageCache := cache.GetPageCache()
+		if cached, ok := pageCache.Get(route); ok {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(cached)
+			return
+		}
+	}
+
+	data := PostsPageData{
+		Posts: posts,
+		Tag:   tag,
+	}
+
+	files := []string{
+		"templates/base.html",
+		"templates/posts.html",
+	}
+	h.renderAndCache(r.Context(), w, route, files, data)
 }
 
 // AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
