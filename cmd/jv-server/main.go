@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -25,17 +27,17 @@ func main() {
 	}
 
 	// Load posts
-	posts, err := content.LoadPosts("content/posts", true)
+	posts, err := content.LoadContent("content/posts", true)
 	if err != nil {
 		logger.Logger.ErrorContext(ctx, "Error loading posts", "error", err)
-		panic("No posts found")
+		os.Exit(1)
 	}
 
 	// Load pages
-	pages, err := content.LoadPosts("content/pages", false)
+	pages, err := content.LoadContent("content/pages", false)
 	if err != nil {
 		logger.Logger.ErrorContext(ctx, "Error loading pages", "error", err)
-		panic("No pages found")
+		os.Exit(1)
 	}
 
 	// Create cache
@@ -82,11 +84,40 @@ func main() {
 	// Rebuild CSS on startup for better DX
 	content.RebuildCSS(ctx)
 
-	// Start server
+	// Start server with timeouts
 	addr := ":8080"
-	logger.Logger.InfoContext(ctx, "Starting server", "address", addr)
-	if err := http.ListenAndServe(addr, r); err != nil {
-		logger.Logger.ErrorContext(ctx, "Server failed to start", "error", err)
-		panic(err)
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
+
+	// Start server in a goroutine
+	go func() {
+		logger.Logger.InfoContext(ctx, "Starting server", "address", addr)
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logger.Logger.ErrorContext(ctx, "Server error", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logger.Logger.InfoContext(ctx, "Shutting down server...")
+
+	// Give outstanding requests 10 seconds to complete
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Logger.ErrorContext(ctx, "Server forced to shutdown", "error", err)
+		os.Exit(1)
+	}
+
+	logger.Logger.InfoContext(ctx, "Server stopped gracefully")
 }

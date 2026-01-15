@@ -33,11 +33,11 @@ var (
 	)
 )
 
-// LoadPosts reads all the files ending in Markdown in a given `dir`, returning a list
+// LoadContent reads all the files ending in Markdown in a given `dir`, returning a list
 // of Post structs. If the `isPost` parameter is true, the naming convention for posts
 // will be checked against the YYYY-MM-DD-slug.md pattern and results will be returned
 // sorted from newest to oldest.
-func LoadPosts(dir string, isPost bool) ([]*Post, error) {
+func LoadContent(dir string, isPost bool) ([]*Post, error) {
 	ctx := context.Background()
 	start := time.Now()
 
@@ -51,7 +51,7 @@ func LoadPosts(dir string, isPost bool) ([]*Post, error) {
 	// being more general/friendly.
 	if len(paths) == 0 {
 		logger.Logger.ErrorContext(ctx, "No content found", "directory", dir)
-		return nil, fmt.Errorf("LoadPosts: no content found in %s", dir)
+		return nil, fmt.Errorf("LoadContent: no content found in %s", dir)
 	}
 
 	var contentList []*Post
@@ -130,7 +130,7 @@ func loadPost(path string, isPost bool) (*Post, error) {
 	// Parse date
 	date, err := time.Parse("2006-01-02", postMeta.Date)
 	if err != nil {
-		return nil, fmt.Errorf("invalid date format for post `%s`: %s", path, postMeta.Date)
+		return nil, fmt.Errorf("invalid date format for post `%s`: %w", path, err)
 	}
 
 	// Generate slug from filename

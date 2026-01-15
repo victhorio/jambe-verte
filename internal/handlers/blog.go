@@ -217,19 +217,17 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Load posts
-	posts, err := content.LoadPosts("content/posts", true)
+	posts, err := content.LoadContent("content/posts", true)
 	if err != nil {
 		logger.Logger.ErrorContext(ctx, "Error loading posts during refresh", "error", err)
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		internal.WriteInternalError(w, "JVE-IHB-PO")
 		return
 	}
 
 	// Load pages
-	pages, err := content.LoadPosts("content/pages", false)
+	pages, err := content.LoadContent("content/pages", false)
 	if err != nil {
 		logger.Logger.ErrorContext(ctx, "Error loading pages during refresh", "error", err)
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		internal.WriteInternalError(w, "JVE-IHB-PA")
 		return
 	}
