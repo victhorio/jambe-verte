@@ -2,7 +2,7 @@ This file was last updated 2026-01-14.
 
 ## Overview
 
-Personal blog/website for Victhor Sartório. Go server with chi router, markdown content with YAML frontmatter, Tailwind CSS and htmx.
+Personal blog/website for Victhor Sartório. Go server with chi router, markdown content with YAML frontmatter, Tailwind CSS.
 
 ## Architecture
 
@@ -23,6 +23,9 @@ Personal blog/website for Victhor Sartório. Go server with chi router, markdown
 
 - `templates/base.html` - Master layout with nav and footer. Child templates define `title` and `main` blocks.
 - `templates/home.html` - Home page template.
+- `templates/posts.html` - Blog listing (used for both `/posts` and `/tag/{tag}`).
+- `templates/post.html` - Individual post page.
+- `templates/page.html` - Static page template.
 
 - `content/posts/` - Blog posts as `YYYY-MM-DD-slug.md` with frontmatter (title, date, tags, description, draft).
 - `content/pages/` - Static pages as `slug.md` with frontmatter (title, description).
@@ -36,7 +39,7 @@ Personal blog/website for Victhor Sartório. Go server with chi router, markdown
 
 ## Routes
 
-- `/` - Home (displays About page content)
+- `/` - Home (placeholder, pending redesign)
 - `/posts` - Blog listing
 - `/blog/{slug}` - Individual post
 - `/tag/{tag}` - Posts filtered by tag
