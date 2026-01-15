@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/xml"
 	"net/http"
 	"time"
@@ -67,8 +68,10 @@ func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
-	if err := xml.NewEncoder(w).Encode(rss); err != nil {
+	// Buffer the XML output first so we can return a proper error status if encoding fails
+	var buf bytes.Buffer
+	buf.WriteString(xml.Header)
+	if err := xml.NewEncoder(&buf).Encode(rss); err != nil {
 		logger.Logger.ErrorContext(
 			r.Context(),
 			"Failed to encode RSS feed",
@@ -76,5 +79,9 @@ func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
 			"posts_count", len(posts),
 		)
 		internal.WriteInternalError(w, "JVE-IHF-XE")
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
+	w.Write(buf.Bytes())
 }
