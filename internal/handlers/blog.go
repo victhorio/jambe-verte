@@ -46,10 +46,11 @@ func (h *Handler) setCache(cache *cache.Cache) {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
+	c := h.getCache()
+	pageCache := c.GetPageCache()
+
 	// Check page cache first, unless we're in debug mode
 	if !h.debugMode {
-		cache := h.getCache()
-		pageCache := cache.GetPageCache()
 		if cached, ok := pageCache.Get("/"); ok {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(cached)
@@ -61,14 +62,15 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		"templates/base.html",
 		"templates/home.html",
 	}
-	h.renderAndCache(r.Context(), w, "/", files, nil)
+	h.renderAndCache(r.Context(), w, pageCache, "/", files, nil)
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
+	c := h.getCache()
+	pageCache := c.GetPageCache()
+
 	// Check page cache first, unless we're in debug mode
 	if !h.debugMode {
-		cache := h.getCache()
-		pageCache := cache.GetPageCache()
 		if cached, ok := pageCache.Get("/posts"); ok {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(cached)
@@ -77,21 +79,22 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := PostsPageData{
-		Posts: h.getCache().GetPosts(),
+		Posts: c.GetPosts(),
 	}
 
 	files := []string{
 		"templates/base.html",
 		"templates/posts.html",
 	}
-	h.renderAndCache(r.Context(), w, "/posts", files, data)
+	h.renderAndCache(r.Context(), w, pageCache, "/posts", files, data)
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	cache := h.getCache()
+	c := h.getCache()
+	pageCache := c.GetPageCache()
 
-	post, ok := cache.GetPost(slug)
+	post, ok := c.GetPost(slug)
 	if !ok {
 		http.NotFound(w, r)
 		return
@@ -100,7 +103,6 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	// Check page cache first, unless we're in debug mode
 	route := "/blog/" + slug
 	if !h.debugMode {
-		pageCache := cache.GetPageCache()
 		if cached, ok := pageCache.Get(route); ok {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(cached)
@@ -112,14 +114,15 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 		"templates/base.html",
 		"templates/post.html",
 	}
-	h.renderAndCache(r.Context(), w, route, files, post)
+	h.renderAndCache(r.Context(), w, pageCache, route, files, post)
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "page")
-	cache := h.getCache()
+	c := h.getCache()
+	pageCache := c.GetPageCache()
 
-	page, ok := cache.GetPage(slug)
+	page, ok := c.GetPage(slug)
 	if !ok {
 		http.NotFound(w, r)
 		return
@@ -128,7 +131,6 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	// Check page cache first, unless we're in debug mode
 	route := "/" + slug
 	if !h.debugMode {
-		pageCache := cache.GetPageCache()
 		if cached, ok := pageCache.Get(route); ok {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(cached)
@@ -140,14 +142,15 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 		"templates/base.html",
 		"templates/page.html",
 	}
-	h.renderAndCache(r.Context(), w, route, files, page)
+	h.renderAndCache(r.Context(), w, pageCache, route, files, page)
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	tag := chi.URLParam(r, "tag")
-	cache := h.getCache()
+	c := h.getCache()
+	pageCache := c.GetPageCache()
 
-	posts := cache.GetPostsByTag(tag)
+	posts := c.GetPostsByTag(tag)
 	if len(posts) == 0 {
 		http.NotFound(w, r)
 		return
@@ -156,7 +159,6 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	// Check page cache first, unless we're in debug mode
 	route := "/tag/" + tag
 	if !h.debugMode {
-		pageCache := cache.GetPageCache()
 		if cached, ok := pageCache.Get(route); ok {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Write(cached)
@@ -173,7 +175,7 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		"templates/base.html",
 		"templates/posts.html",
 	}
-	h.renderAndCache(r.Context(), w, route, files, data)
+	h.renderAndCache(r.Context(), w, pageCache, route, files, data)
 }
 
 // AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
@@ -212,7 +214,7 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, route string, templateFiles []string, data any) {
+func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pageCache *cache.PageCache, route string, templateFiles []string, data any) {
 	// Check if context is cancelled
 	select {
 	case <-ctx.Done():
@@ -259,8 +261,6 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, rou
 	// Cache the rendered content (skip caching in debug mode)
 	content := buf.Bytes()
 	if !h.debugMode {
-		cache := h.getCache()
-		pageCache := cache.GetPageCache()
 		pageCache.Set(route, content)
 	}
 
