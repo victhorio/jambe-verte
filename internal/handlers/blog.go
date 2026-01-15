@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"html/template"
 	"net/http"
 	"sync"
@@ -41,6 +42,12 @@ type Handler struct {
 	mu        sync.RWMutex
 	cache     *cache.Cache
 	debugMode bool
+
+	// Pre-parsed templates (parsed once at startup)
+	homeTmpl  *template.Template
+	postsTmpl *template.Template
+	postTmpl  *template.Template
+	pageTmpl  *template.Template
 }
 
 type PostsPageData struct {
@@ -48,11 +55,35 @@ type PostsPageData struct {
 	Tag   string
 }
 
-func New(cache *cache.Cache, debugMode bool) *Handler {
+func New(cache *cache.Cache, debugMode bool) (*Handler, error) {
+	homeTmpl, err := template.ParseFiles("templates/base.html", "templates/home.html")
+	if err != nil {
+		return nil, fmt.Errorf("parsing home template: %w", err)
+	}
+
+	postsTmpl, err := template.ParseFiles("templates/base.html", "templates/posts.html")
+	if err != nil {
+		return nil, fmt.Errorf("parsing posts template: %w", err)
+	}
+
+	postTmpl, err := template.ParseFiles("templates/base.html", "templates/post.html")
+	if err != nil {
+		return nil, fmt.Errorf("parsing post template: %w", err)
+	}
+
+	pageTmpl, err := template.ParseFiles("templates/base.html", "templates/page.html")
+	if err != nil {
+		return nil, fmt.Errorf("parsing page template: %w", err)
+	}
+
 	return &Handler{
 		cache:     cache,
 		debugMode: debugMode,
-	}
+		homeTmpl:  homeTmpl,
+		postsTmpl: postsTmpl,
+		postTmpl:  postTmpl,
+		pageTmpl:  pageTmpl,
+	}, nil
 }
 
 func (h *Handler) getCache() *cache.Cache {
@@ -80,11 +111,7 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	files := []string{
-		"templates/base.html",
-		"templates/home.html",
-	}
-	h.renderAndCache(r.Context(), w, pageCache, "/", files, nil)
+	h.renderAndCache(r.Context(), w, pageCache, "/", h.homeTmpl, nil)
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
@@ -104,11 +131,7 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 		Posts: c.GetPosts(),
 	}
 
-	files := []string{
-		"templates/base.html",
-		"templates/posts.html",
-	}
-	h.renderAndCache(r.Context(), w, pageCache, "/posts", files, data)
+	h.renderAndCache(r.Context(), w, pageCache, "/posts", h.postsTmpl, data)
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
@@ -132,11 +155,7 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	files := []string{
-		"templates/base.html",
-		"templates/post.html",
-	}
-	h.renderAndCache(r.Context(), w, pageCache, route, files, post)
+	h.renderAndCache(r.Context(), w, pageCache, route, h.postTmpl, post)
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
@@ -160,11 +179,7 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	files := []string{
-		"templates/base.html",
-		"templates/page.html",
-	}
-	h.renderAndCache(r.Context(), w, pageCache, route, files, page)
+	h.renderAndCache(r.Context(), w, pageCache, route, h.pageTmpl, page)
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
@@ -193,11 +208,7 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		Tag:   tag,
 	}
 
-	files := []string{
-		"templates/base.html",
-		"templates/posts.html",
-	}
-	h.renderAndCache(r.Context(), w, pageCache, route, files, data)
+	h.renderAndCache(r.Context(), w, pageCache, route, h.postsTmpl, data)
 }
 
 // AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
@@ -236,7 +247,7 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pageCache *cache.PageCache, route string, templateFiles []string, data any) {
+func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pageCache *cache.PageCache, route string, tmpl *template.Template, data any) {
 	// Check if context is cancelled
 	select {
 	case <-ctx.Done():
@@ -247,22 +258,9 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 
 	startTime := time.Now()
 
-	// Parse the template files
-	ts, err := template.ParseFiles(templateFiles...)
-	if err != nil {
-		logger.Logger.ErrorContext(
-			ctx,
-			"Template parsing failed",
-			"error", err,
-			"files", templateFiles,
-		)
-		internal.WriteInternalError(w, "JVE-IHB-TP")
-		return
-	}
-
 	// Execute the template
 	var buf bytes.Buffer
-	if err := ts.ExecuteTemplate(&buf, "base", map[string]any{
+	if err := tmpl.ExecuteTemplate(&buf, "base", map[string]any{
 		"DebugMode": h.debugMode,
 		"Version":   internal.Version,
 		"Data":      data,

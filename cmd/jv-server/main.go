@@ -42,7 +42,11 @@ func main() {
 	c := cache.New(posts, pages)
 
 	// Create handlers
-	h := handlers.New(c, debugMode)
+	h, err := handlers.New(c, debugMode)
+	if err != nil {
+		logger.Logger.ErrorContext(ctx, "Error parsing templates", "error", err)
+		os.Exit(1)
+	}
 
 	// Setup routes
 	r := chi.NewRouter()
