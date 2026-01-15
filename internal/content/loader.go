@@ -20,6 +20,19 @@ import (
 	"github.com/yuin/goldmark/parser"
 )
 
+var (
+	// postFilenameRegex validates post filenames follow the YYYY-MM-DD-slug.md pattern
+	postFilenameRegex = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$`)
+
+	// mdParser is the shared goldmark instance for converting markdown to HTML
+	mdParser = goldmark.New(
+		goldmark.WithExtensions(
+			meta.Meta,
+			highlighting.NewHighlighting(highlighting.WithStyle("github")),
+		),
+	)
+)
+
 // LoadPosts reads all the files ending in Markdown in a given `dir`, returning a list
 // of Post structs. If the `isPost` parameter is true, the naming convention for posts
 // will be checked against the YYYY-MM-DD-slug.md pattern and results will be returned
@@ -81,8 +94,7 @@ func loadPost(path string, isPost bool) (*Post, error) {
 	// First, if it's a post, let's make sure that the file follows the correct naming convention of YYYY-MM-DD-slug.md
 	base := filepath.Base(path)
 	if isPost {
-		re := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[a-z0-9-]+.md$`)
-		if !re.MatchString(base) {
+		if !postFilenameRegex.MatchString(base) {
 			return nil, fmt.Errorf("invalid filename for post `%s`: expected: YYYY-MM-DD-slug.md", path)
 		}
 	}
@@ -92,17 +104,9 @@ func loadPost(path string, isPost bool) (*Post, error) {
 		return nil, fmt.Errorf("failed to read post `%s`: %w", path, err)
 	}
 
-	// Parse markdown with frontmatter and syntax highlighting
-	md := goldmark.New(
-		goldmark.WithExtensions(
-			meta.Meta,
-			highlighting.NewHighlighting(highlighting.WithStyle("github")),
-		),
-	)
-
 	var htmlBuf bytes.Buffer
 	context := parser.NewContext()
-	if err := md.Convert(content, &htmlBuf, parser.WithContext(context)); err != nil {
+	if err := mdParser.Convert(content, &htmlBuf, parser.WithContext(context)); err != nil {
 		return nil, fmt.Errorf("failed to convert post `%s`: %w", path, err)
 	}
 
