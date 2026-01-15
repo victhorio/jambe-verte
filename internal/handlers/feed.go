@@ -72,12 +72,7 @@ func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	buf.WriteString(xml.Header)
 	if err := xml.NewEncoder(&buf).Encode(rss); err != nil {
-		logger.Logger.ErrorContext(
-			r.Context(),
-			"Failed to encode RSS feed",
-			"error", err,
-			"posts_count", len(posts),
-		)
+		logger.WithRequest(r.Context()).Error("Failed to encode RSS feed", "error", err, "posts_count", len(posts))
 		internal.WriteInternalError(w, "JVE-IHF-XE")
 		return
 	}

@@ -18,25 +18,24 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
-
 	// Check if debug mode is enabled
 	debugMode := os.Getenv("JV_DEBUG") == "1"
+	logger.Init(debugMode)
 	if debugMode {
-		logger.Logger.WarnContext(ctx, "===== Debug mode enabled =====")
+		logger.Logger.Warn("===== Debug mode enabled =====")
 	}
 
 	// Load posts
 	posts, err := content.LoadContent("content/posts", true)
 	if err != nil {
-		logger.Logger.ErrorContext(ctx, "Error loading posts", "error", err)
+		logger.Logger.Error("Error loading posts", "error", err)
 		os.Exit(1)
 	}
 
 	// Load pages
 	pages, err := content.LoadContent("content/pages", false)
 	if err != nil {
-		logger.Logger.ErrorContext(ctx, "Error loading pages", "error", err)
+		logger.Logger.Error("Error loading pages", "error", err)
 		os.Exit(1)
 	}
 
@@ -46,7 +45,7 @@ func main() {
 	// Create handlers
 	h, err := handlers.New(c, debugMode)
 	if err != nil {
-		logger.Logger.ErrorContext(ctx, "Error parsing templates", "error", err)
+		logger.Logger.Error("Error parsing templates", "error", err)
 		os.Exit(1)
 	}
 
@@ -56,7 +55,7 @@ func main() {
 	// Middleware
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
+	r.Use(mymiddleware.RequestLogger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(middleware.Compress(5))
@@ -82,7 +81,7 @@ func main() {
 	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
 
 	// Rebuild CSS on startup for better DX
-	content.RebuildCSS(ctx)
+	content.RebuildCSS(context.Background())
 
 	// Start server with timeouts
 	addr := ":8080"
@@ -96,9 +95,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		logger.Logger.InfoContext(ctx, "Starting server", "address", addr)
+		logger.Logger.Info("Starting server", "address", addr)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			logger.Logger.ErrorContext(ctx, "Server error", "error", err)
+			logger.Logger.Error("Server error", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -108,16 +107,16 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Logger.InfoContext(ctx, "Shutting down server...")
+	logger.Logger.Info("Shutting down server...")
 
 	// Give outstanding requests 10 seconds to complete
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Logger.ErrorContext(ctx, "Server forced to shutdown", "error", err)
+		logger.Logger.Error("Server forced to shutdown", "error", err)
 		os.Exit(1)
 	}
 
-	logger.Logger.InfoContext(ctx, "Server stopped gracefully")
+	logger.Logger.Info("Server stopped gracefully")
 }

@@ -18,33 +18,35 @@ func init() {
 
 func AdminAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log := logger.WithRequest(r.Context())
+
 		if adminToken == "" {
-			logger.Logger.ErrorContext(r.Context(), "JV_ADMIN_TOKEN environment variable not set")
+			log.Error("JV_ADMIN_TOKEN environment variable not set")
 			internal.WriteInternalError(w, "JVE-IMA-MT")
 			return
 		}
 
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			logger.Logger.WarnContext(r.Context(), "Missing Authorization header", "path", r.URL.Path)
+			log.Warn("Missing Authorization header", "path", r.URL.Path)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			logger.Logger.WarnContext(r.Context(), "Invalid Authorization header format", "path", r.URL.Path)
+			log.Warn("Invalid Authorization header format", "path", r.URL.Path)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		if subtle.ConstantTimeCompare([]byte(token), []byte(adminToken)) != 1 {
-			logger.Logger.WarnContext(r.Context(), "Invalid bearer token", "path", r.URL.Path)
+			log.Warn("Invalid bearer token", "path", r.URL.Path)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		logger.Logger.InfoContext(r.Context(), "Admin access granted", "path", r.URL.Path)
+		log.Info("Admin access granted", "path", r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }

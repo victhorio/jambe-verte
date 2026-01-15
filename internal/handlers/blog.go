@@ -214,12 +214,12 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 // AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
 // and replacing it on the handler.
 func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	log := logger.WithRequest(r.Context())
 
 	// Load posts
 	posts, err := content.LoadContent("content/posts", true)
 	if err != nil {
-		logger.Logger.ErrorContext(ctx, "Error loading posts during refresh", "error", err)
+		log.Error("Error loading posts during refresh", "error", err)
 		internal.WriteInternalError(w, "JVE-IHB-PO")
 		return
 	}
@@ -227,7 +227,7 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	// Load pages
 	pages, err := content.LoadContent("content/pages", false)
 	if err != nil {
-		logger.Logger.ErrorContext(ctx, "Error loading pages during refresh", "error", err)
+		log.Error("Error loading pages during refresh", "error", err)
 		internal.WriteInternalError(w, "JVE-IHB-PA")
 		return
 	}
@@ -236,20 +236,22 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	newCache := cache.New(posts, pages)
 	h.setCache(newCache)
 
-	logger.Logger.InfoContext(ctx, "Cache refreshed successfully", "posts", len(posts), "pages", len(pages))
+	log.Info("Cache refreshed successfully", "posts", len(posts), "pages", len(pages))
 
 	// Also attempt to rebuild CSS
-	content.RebuildCSS(ctx)
+	content.RebuildCSS(r.Context())
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte("OK"))
 }
 
 func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pageCache *cache.PageCache, route string, tmpl *template.Template, data any) {
+	log := logger.WithRequest(ctx)
+
 	// Check if context is cancelled
 	select {
 	case <-ctx.Done():
-		logger.Logger.WarnContext(ctx, "Request cancelled", "error", ctx.Err())
+		log.Warn("Request cancelled", "error", ctx.Err())
 		return
 	default:
 	}
@@ -263,18 +265,13 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 		"Version":   internal.Version,
 		"Data":      data,
 	}); err != nil {
-		logger.Logger.ErrorContext(
-			ctx,
-			"Template execution failed",
-			"error", err,
-			"template", "base",
-		)
+		log.Error("Template execution failed", "error", err, "template", "base")
 		internal.WriteInternalError(w, "JVE-IHB-TX")
 		return
 	}
 
 	duration := time.Since(startTime)
-	logger.Logger.InfoContext(ctx, "Rendered route in cold path", "route", route, "duration", duration.String())
+	log.Info("Rendered route in cold path", "route", route, "duration", duration.String())
 
 	// Cache the rendered content (skip caching in debug mode)
 	content := buf.Bytes()
@@ -285,21 +282,13 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 	// Check if context is cancelled before writing response
 	select {
 	case <-ctx.Done():
-		logger.Logger.WarnContext(
-			ctx,
-			"Request cancelled before response",
-			"error", ctx.Err(),
-		)
+		log.Warn("Request cancelled before response", "error", ctx.Err())
 		return
 	default:
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if _, err := w.Write(content); err != nil {
-		logger.Logger.ErrorContext(
-			ctx,
-			"Failed to write cached response",
-			"error", err,
-		)
+		log.Error("Failed to write cached response", "error", err)
 	}
 }
