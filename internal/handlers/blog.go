@@ -15,6 +15,28 @@ import (
 	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
+// Handler manages HTTP request handling with hot-reloadable content caching.
+//
+// # Cache Consistency Model
+//
+// The cache can be swapped atomically at any time via AdminRefresh (e.g., when
+// content is updated). This creates a subtle concurrency requirement: each request
+// must use a single, consistent cache snapshot throughout its lifetime.
+//
+// The problem arises because each Cache instance contains its own PageCache for
+// storing rendered HTML. If a handler fetches data from Cache A, then AdminRefresh
+// swaps in Cache B, and then the handler writes rendered HTML to "the current cache",
+// it would write stale content (rendered from A's data) into Cache B's PageCache.
+// Future requests would then serve this stale cached HTML until the next refresh.
+//
+// To prevent this, handlers must:
+//  1. Call getCache() exactly once at the start of the request
+//  2. Extract both content data AND the PageCache from that same snapshot
+//  3. Pass the PageCache explicitly to renderAndCache()
+//
+// This ensures that if a cache swap occurs mid-request, the rendered content is
+// written to the old cache's PageCache (which will be garbage collected) rather
+// than polluting the new cache with stale data.
 type Handler struct {
 	mu        sync.RWMutex
 	cache     *cache.Cache
