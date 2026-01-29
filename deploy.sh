@@ -35,11 +35,12 @@ echo -e "${YELLOW}[3/6] Copying required files...${NC}"
 cp -r templates "$DEPLOY_DIR/"
 cp -r static "$DEPLOY_DIR/"
 cp -r content "$DEPLOY_DIR/"
+cp package.json tailwind.config.js "$DEPLOY_DIR/"
 
 # Step 4: Create deployment package
 echo -e "${YELLOW}[4/6] Creating deployment package...${NC}"
 cd "$BUILD_DIR"
-COPYFILE_DISABLE=1 tar -czf "$PACKAGE_NAME" --exclude='._*' --exclude='.DS_Store' deploy/
+COPYFILE_DISABLE=1 tar -czf "$PACKAGE_NAME" --exclude='._*' --exclude='.DS_Store' --no-xattrs --no-mac-metadata deploy/
 cd ..
 
 # Step 5: Transfer to server
@@ -77,4 +78,5 @@ echo
 echo -e "Next steps on the server:"
 echo -e "> ${YELLOW}cd /tmp && tar -xzf $PACKAGE_NAME${NC}"
 echo -e "> ${YELLOW}rm -rf ~/deploy && mv deploy ~/${NC}"
-echo -e "> ${YELLOW}cd ~ && systemctl restart jv-server${NC}"
+echo -e "> ${YELLOW}cd ~/deploy && bun install${NC}"
+echo -e "> ${YELLOW}systemctl restart jv-server${NC}"
