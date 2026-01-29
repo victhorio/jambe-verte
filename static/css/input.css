@@ -40,6 +40,10 @@
 }
 
 /* Post content styles */
+.post-content > :first-child {
+  margin-top: 0;
+}
+
 .post-content p {
   margin-bottom: 1rem;
 }
