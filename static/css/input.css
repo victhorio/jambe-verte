@@ -34,6 +34,11 @@
 @tailwind components;
 @tailwind utilities;
 
+::selection {
+  background-color: #7d9a78;
+  color: white;
+}
+
 /* Post content styles */
 .post-content p {
   margin-bottom: 1rem;
@@ -76,7 +81,7 @@
 }
 
 .post-content blockquote {
-  border-left: 3px solid #9ca3af;
+  border-left: 3px solid #7d9a78;
   padding-left: 1rem;
   margin: 1rem 0;
   color: #4b5563;
@@ -84,11 +89,14 @@
 }
 
 .post-content a {
-  color: #111827;
+  color: #6b7c4c;
   text-decoration: underline;
 }
 
-.post-content a:hover,
+.post-content a:hover {
+  color: #7d9a78;
+}
+
 .post-content a:visited {
-  color: #4b5563;
+  color: #6b7c4c;
 }

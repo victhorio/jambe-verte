@@ -9,6 +9,12 @@ module.exports = {
       fontFamily: {
         'sans': ['Berkeley Mono', 'monospace'],
       },
+      colors: {
+        jv: {
+          DEFAULT: '#6b7c4c',
+          light: '#7d9a78',
+        },
+      },
     },
   },
   plugins: [],

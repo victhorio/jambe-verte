@@ -55,6 +55,10 @@ type Handler struct {
 	templates map[string]*template.Template
 }
 
+type HomePageData struct {
+	RecentPosts []*content.Post
+}
+
 type PostsPageData struct {
 	Posts []*content.Post
 	Tag   string
@@ -133,7 +137,18 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.renderAndCache(r.Context(), w, pageCache, "/", "home", nil)
+	// Get up to 2 most recent posts
+	posts := c.GetPosts()
+	recentPosts := posts
+	if len(posts) > 2 {
+		recentPosts = posts[:2]
+	}
+
+	data := HomePageData{
+		RecentPosts: recentPosts,
+	}
+
+	h.renderAndCache(r.Context(), w, pageCache, "/", "home", data)
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {

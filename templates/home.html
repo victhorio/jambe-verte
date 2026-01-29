@@ -1,26 +1,44 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-<div class="flex justify-center">
-    <div class="max-w-lg border border-black p-4 flex flex-col">
-        <h1 class="text-2xl font-bold">Hello, world!</h1>
-        <br>
-        <p>This website is <span class="bg-red-500 text-white px-1">undergoing a redesign</span>. </p>
-        <p>Come back at a later date.</p>
-        <br>
-        <p>Expect updates by: <span id="delivery-date" class="font-bold"></span>.</p>
-        <br>
-        <p class="self-end">- Victhor Sartório</p>
-    </div>
-</div>
+<div class="px-4">
+  <div class="border-l-4 border-jv-light pl-4 py-2 mb-4">
+    <p>Welcome to my personal blog! Unfortunately it's still <span class="bg-jv text-white px-1">under construction</span>.<br>Come back later :)</p>
+  </div>
 
-<script>
-    const today = new Date();
-    const duration = 14 * 24 * 60 * 60 * 1000;
-    const deliveryDate = new Date(today.getTime() + duration);
-    const deliveryDateFormatted = deliveryDate.toISOString().split('T')[0];
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('delivery-date').textContent = deliveryDateFormatted;
-    });
-</script>
+  <h2 class="text-lg font-bold tracking-tight mb-3">Latest posts</h2>
+
+  {{if .Data.RecentPosts}}
+  <ul class="space-y-4">
+    {{range .Data.RecentPosts}}
+    <li class="border-b border-gray-300 pb-4 last:border-b-0 last:pb-0">
+      <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+        <time class="text-sm text-gray-500 font-mono shrink-0" datetime="{{.Date.Format "2006-01-02"}}">
+          {{.Date.Format "2006-01-02"}}
+        </time>
+        <a href="/blog/{{.Slug}}" class="text-gray-900 font-bold tracking-tight hover:underline">
+          {{.Title}}
+        </a>
+      </div>
+      {{if .Description}}
+      <p class="text-sm text-gray-600 mt-1">{{.Description}}</p>
+      {{end}}
+      {{if .Tags}}
+      <div class="flex flex-wrap gap-2 mt-2">
+        {{range .Tags}}
+        <a href="/tag/{{.}}" class="text-xs text-jv-light hover:text-jv">#{{.}}</a>
+        {{end}}
+      </div>
+      {{end}}
+    </li>
+    {{end}}
+  </ul>
+
+  <div class="mt-4">
+    <a href="/posts" class="text-jv hover:text-jv-light hover:underline">View all posts →</a>
+  </div>
+  {{else}}
+  <p class="text-gray-600">No posts yet.</p>
+  {{end}}
+</div>
 {{end}}
