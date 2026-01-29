@@ -16,6 +16,14 @@ import (
 	"github.com/victhorio/jambe-verte/internal/logger"
 )
 
+// Template file paths for each template name
+var templateFiles = map[string][]string{
+	"home":  {"templates/base.html", "templates/home.html"},
+	"posts": {"templates/base.html", "templates/posts.html"},
+	"post":  {"templates/base.html", "templates/post.html"},
+	"page":  {"templates/base.html", "templates/page.html"},
+}
+
 // Handler manages HTTP request handling with hot-reloadable content caching.
 //
 // # Cache Consistency Model
@@ -43,11 +51,8 @@ type Handler struct {
 	cache     *cache.Cache
 	debugMode bool
 
-	// Pre-parsed templates (parsed once at startup)
-	homeTmpl  *template.Template
-	postsTmpl *template.Template
-	postTmpl  *template.Template
-	pageTmpl  *template.Template
+	// Pre-parsed templates (parsed once at startup, used in production)
+	templates map[string]*template.Template
 }
 
 type PostsPageData struct {
@@ -56,40 +61,52 @@ type PostsPageData struct {
 }
 
 func New(cache *cache.Cache, debugMode bool) (*Handler, error) {
-	homeTmpl, err := template.ParseFiles("templates/base.html", "templates/home.html")
-	if err != nil {
-		return nil, fmt.Errorf("parsing home template: %w", err)
-	}
+	templates := make(map[string]*template.Template)
 
-	postsTmpl, err := template.ParseFiles("templates/base.html", "templates/posts.html")
-	if err != nil {
-		return nil, fmt.Errorf("parsing posts template: %w", err)
-	}
-
-	postTmpl, err := template.ParseFiles("templates/base.html", "templates/post.html")
-	if err != nil {
-		return nil, fmt.Errorf("parsing post template: %w", err)
-	}
-
-	pageTmpl, err := template.ParseFiles("templates/base.html", "templates/page.html")
-	if err != nil {
-		return nil, fmt.Errorf("parsing page template: %w", err)
+	for name, files := range templateFiles {
+		tmpl, err := template.ParseFiles(files...)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %s template: %w", name, err)
+		}
+		templates[name] = tmpl
 	}
 
 	return &Handler{
 		cache:     cache,
 		debugMode: debugMode,
-		homeTmpl:  homeTmpl,
-		postsTmpl: postsTmpl,
-		postTmpl:  postTmpl,
-		pageTmpl:  pageTmpl,
+		templates: templates,
 	}, nil
 }
 
-func (h *Handler) getCache() *cache.Cache {
+// getTemplate returns a template by name. In debug mode, it re-parses from disk
+// to pick up any changes. In production, it returns the cached template.
+func (h *Handler) getTemplate(name string) (*template.Template, error) {
+	files, ok := templateFiles[name]
+	if !ok {
+		return nil, fmt.Errorf("unknown template: %s", name)
+	}
+	if !h.debugMode {
+		return h.templates[name], nil
+	}
+	return template.ParseFiles(files...)
+}
+
+func (h *Handler) getCache() (*cache.Cache, error) {
+	// In debug mode, reload content from disk for hot-reload
+	if h.debugMode {
+		posts, err := content.LoadContent("content/posts", true)
+		if err != nil {
+			return nil, fmt.Errorf("loading posts: %w", err)
+		}
+		pages, err := content.LoadContent("content/pages", false)
+		if err != nil {
+			return nil, fmt.Errorf("loading pages: %w", err)
+		}
+		return cache.New(posts, pages), nil
+	}
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	return h.cache
+	return h.cache, nil
 }
 
 func (h *Handler) setCache(cache *cache.Cache) {
@@ -99,7 +116,12 @@ func (h *Handler) setCache(cache *cache.Cache) {
 }
 
 func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
-	c := h.getCache()
+	c, err := h.getCache()
+	if err != nil {
+		logger.WithRequest(r.Context()).Error("Failed to load content", "error", err)
+		internal.WriteInternalError(w, "JVE-IHB-LC")
+		return
+	}
 	pageCache := c.GetPageCache()
 
 	// Check page cache first, unless we're in debug mode
@@ -111,11 +133,16 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.renderAndCache(r.Context(), w, pageCache, "/", h.homeTmpl, nil)
+	h.renderAndCache(r.Context(), w, pageCache, "/", "home", nil)
 }
 
 func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
-	c := h.getCache()
+	c, err := h.getCache()
+	if err != nil {
+		logger.WithRequest(r.Context()).Error("Failed to load content", "error", err)
+		internal.WriteInternalError(w, "JVE-IHB-LC")
+		return
+	}
 	pageCache := c.GetPageCache()
 
 	// Check page cache first, unless we're in debug mode
@@ -131,12 +158,17 @@ func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 		Posts: c.GetPosts(),
 	}
 
-	h.renderAndCache(r.Context(), w, pageCache, "/posts", h.postsTmpl, data)
+	h.renderAndCache(r.Context(), w, pageCache, "/posts", "posts", data)
 }
 
 func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	c := h.getCache()
+	c, err := h.getCache()
+	if err != nil {
+		logger.WithRequest(r.Context()).Error("Failed to load content", "error", err)
+		internal.WriteInternalError(w, "JVE-IHB-LC")
+		return
+	}
 	pageCache := c.GetPageCache()
 
 	post, ok := c.GetPost(slug)
@@ -155,12 +187,17 @@ func (h *Handler) ShowPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.renderAndCache(r.Context(), w, pageCache, route, h.postTmpl, post)
+	h.renderAndCache(r.Context(), w, pageCache, route, "post", post)
 }
 
 func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "page")
-	c := h.getCache()
+	c, err := h.getCache()
+	if err != nil {
+		logger.WithRequest(r.Context()).Error("Failed to load content", "error", err)
+		internal.WriteInternalError(w, "JVE-IHB-LC")
+		return
+	}
 	pageCache := c.GetPageCache()
 
 	page, ok := c.GetPage(slug)
@@ -179,12 +216,17 @@ func (h *Handler) ShowPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.renderAndCache(r.Context(), w, pageCache, route, h.pageTmpl, page)
+	h.renderAndCache(r.Context(), w, pageCache, route, "page", page)
 }
 
 func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 	tag := chi.URLParam(r, "tag")
-	c := h.getCache()
+	c, err := h.getCache()
+	if err != nil {
+		logger.WithRequest(r.Context()).Error("Failed to load content", "error", err)
+		internal.WriteInternalError(w, "JVE-IHB-LC")
+		return
+	}
 	pageCache := c.GetPageCache()
 
 	posts := c.GetPostsByTag(tag)
@@ -208,7 +250,7 @@ func (h *Handler) PostsByTag(w http.ResponseWriter, r *http.Request) {
 		Tag:   tag,
 	}
 
-	h.renderAndCache(r.Context(), w, pageCache, route, h.postsTmpl, data)
+	h.renderAndCache(r.Context(), w, pageCache, route, "posts", data)
 }
 
 // AdminRefresh is responsible for hot-reloading content by creating an entirely new cache
@@ -245,7 +287,7 @@ func (h *Handler) AdminRefresh(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pageCache *cache.PageCache, route string, tmpl *template.Template, data any) {
+func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pageCache *cache.PageCache, route string, templateName string, data any) {
 	log := logger.WithRequest(ctx)
 
 	// Check if context is cancelled
@@ -254,6 +296,19 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 		log.Warn("Request cancelled", "error", ctx.Err())
 		return
 	default:
+	}
+
+	// In debug mode, rebuild CSS to pick up any new Tailwind classes
+	if h.debugMode {
+		content.RebuildCSS(ctx)
+	}
+
+	// Get template (fresh parse in debug mode, cached in production)
+	tmpl, err := h.getTemplate(templateName)
+	if err != nil {
+		log.Error("Template parsing failed", "error", err, "template", templateName)
+		internal.WriteInternalError(w, "JVE-IHB-TP")
+		return
 	}
 
 	startTime := time.Now()
@@ -265,7 +320,7 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 		"Version":   internal.Version,
 		"Data":      data,
 	}); err != nil {
-		log.Error("Template execution failed", "error", err, "template", "base")
+		log.Error("Template execution failed", "error", err, "template", templateName)
 		internal.WriteInternalError(w, "JVE-IHB-TX")
 		return
 	}
@@ -274,9 +329,9 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 	log.Info("Rendered route in cold path", "route", route, "duration", duration.String())
 
 	// Cache the rendered content (skip caching in debug mode)
-	content := buf.Bytes()
+	rendered := buf.Bytes()
 	if !h.debugMode {
-		pageCache.Set(route, content)
+		pageCache.Set(route, rendered)
 	}
 
 	// Check if context is cancelled before writing response
@@ -288,7 +343,7 @@ func (h *Handler) renderAndCache(ctx context.Context, w http.ResponseWriter, pag
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if _, err := w.Write(content); err != nil {
+	if _, err := w.Write(rendered); err != nil {
 		log.Error("Failed to write cached response", "error", err)
 	}
 }

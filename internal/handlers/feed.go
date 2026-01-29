@@ -32,8 +32,15 @@ type Item struct {
 }
 
 func (h *Handler) RSSFeed(w http.ResponseWriter, r *http.Request) {
+	c, err := h.getCache()
+	if err != nil {
+		logger.WithRequest(r.Context()).Error("Failed to load content", "error", err)
+		internal.WriteInternalError(w, "JVE-IHF-LC")
+		return
+	}
+
 	// Get recent posts (max 20)
-	posts := h.getCache().GetPosts()
+	posts := c.GetPosts()
 	if len(posts) > 20 {
 		posts = posts[:20]
 	}
